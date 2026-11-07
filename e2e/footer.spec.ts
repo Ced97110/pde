@@ -141,7 +141,7 @@ test.describe("3D logo", () => {
     await expect(logo3d(page)).not.toHaveAttribute("data-ready", /.+/);
   });
 
-  test("sways gently, and stays still under reduced motion", async ({ page }) => {
+  test("moves its shoreline, and stays still under reduced motion", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/fr/mentions-legales");
     await footer(page).scrollIntoViewIfNeeded();
@@ -160,6 +160,34 @@ test.describe("3D logo", () => {
     const still = await logo3d(page).locator("canvas").screenshot();
     await page.waitForTimeout(1_000);
     expect(still.equals(await logo3d(page).locator("canvas").screenshot())).toBe(true);
+  });
+
+  test("renders the sand as uneven yellow rather than one flat colour", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/fr/mentions-legales");
+    await footer(page).scrollIntoViewIfNeeded();
+    await expect(logo3d(page)).toHaveAttribute("data-ready", "true", { timeout: 15_000 });
+    const png = (await logo3d(page).locator("canvas").screenshot()).toString("base64");
+    // A patch of dry sand, right of the feet and clear of the star.
+    const sand = await page.evaluate(async (data) => {
+      const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${data}`)).blob());
+      const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext("2d")!;
+      context.drawImage(bitmap, 0, 0);
+      const { data: pixels } = context.getImageData(127, 63, 19, 18);
+      const mean = (channel: number): number => {
+        const values = pixels.filter((_, index) => index % 4 === channel);
+        return values.reduce((sum, value) => sum + value, 0) / values.length;
+      };
+      const greens = pixels.filter((_, index) => index % 4 === 1);
+      const green = mean(1);
+      const deviation = Math.sqrt(greens.reduce((sum, value) => sum + (value - green) ** 2, 0) / greens.length);
+      return { red: mean(0), green, blue: mean(2), deviation };
+    }, png);
+    expect(sand.deviation).toBeGreaterThan(2);
+    expect(sand.red).toBeGreaterThan(235);
+    expect(sand.green).toBeGreaterThan(170);
+    expect(sand.blue).toBeLessThan(120);
   });
 
   test("leaves page scrolling alone on the logo", async ({ page }) => {

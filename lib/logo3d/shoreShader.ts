@@ -35,11 +35,44 @@ float shoreLine(float x) {
   return shoreRest(x) + uShift + uChop * shoreChop(x, uTime);
 }`;
 
+// Fixed to the disc: only the wet band moves, so the sand never reads as a video.
+const SAND_GLSL = `
+const mat2 SAND_TURN = mat2(0.8, 0.6, -0.6, 0.8);
+float sandHash(vec2 cell) {
+  vec3 mixed = fract(vec3(cell.xyx) * 0.1031);
+  mixed += dot(mixed, mixed.yzx + 33.33);
+  return fract((mixed.x + mixed.y) * mixed.z);
+}
+float sandNoise(vec2 point) {
+  vec2 cell = floor(point);
+  vec2 blend = smoothstep(0.0, 1.0, fract(point));
+  float bottom = mix(sandHash(cell), sandHash(cell + vec2(1.0, 0.0)), blend.x);
+  float top = mix(sandHash(cell + vec2(0.0, 1.0)), sandHash(cell + vec2(1.0, 1.0)), blend.x);
+  return mix(bottom, top, blend.y);
+}
+// Each layer is turned, so no pattern lines up with the grid.
+float sandLayers(vec2 point) {
+  float wide = sandNoise(SAND_TURN * point);
+  float mid = sandNoise(SAND_TURN * SAND_TURN * point * 2.3 + 17.0);
+  float fine = sandNoise(SAND_TURN * SAND_TURN * SAND_TURN * point * 5.1 + 41.0);
+  return 0.55 * wide + 0.3 * mid + 0.15 * fine;
+}`;
+
+// The scene has no sky to reflect, so wet sand adds its own, fading as the sand dries.
+const WET_SHEEN_GLSL = `
+    totalEmissiveRadiance += uWetSky * 0.3 * wetBand * uWet * (0.4 + 1.2 * sandLayers(vSvg * 0.1));`;
+
 // Each role recolours the surface around the moving line; the water is cut along it.
 const FRAGMENTS: Record<Exclude<ShoreRole, "line" | "ripple">, string> = {
   sand: `
-    float reach = shoreRest(vSvg.x) + uReach + uChop * shoreChop(vSvg.x, 0.0);
-    diffuseColor.rgb = mix(diffuseColor.rgb, uWetSand, uWet * smoothstep(reach - 2.5, reach + 2.5, vSvg.y));`,
+    float patches = sandLayers(vSvg * 0.03);
+    float grain = sandLayers(vSvg * 0.75);
+    vec3 drySand = mix(uSandDark, uSandLight, smoothstep(0.3, 0.7, patches));
+    drySand = mix(drySand, uGrainDark, 0.28 * smoothstep(0.52, 0.72, grain));
+    drySand = mix(drySand, uGrainLight, 0.4 * smoothstep(0.48, 0.3, grain));
+    float reach = shoreRest(vSvg.x) + uReach + uChop * shoreChop(vSvg.x, 0.0) + 8.0 * (patches - 0.5);
+    float wetBand = uWet * smoothstep(reach - 2.5, reach + 2.5, vSvg.y);
+    diffuseColor.rgb = mix(drySand, uWetSand * (0.85 + 0.3 * patches), 0.9 * wetBand);`,
   water: `
     float depth = vSvg.y - shoreLine(vSvg.x);
     if (depth < 0.0) discard;
@@ -91,6 +124,11 @@ export function createShore(points: Vector2[]): Shore {
     uSubmerged: { value: new Color(LOGO_COLORS.submerged) },
     uShallow: { value: new Color(LOGO_COLORS.shallow) },
     uWetSand: { value: new Color(LOGO_COLORS.wetSand) },
+    uSandLight: { value: new Color(LOGO_COLORS.sandLight) },
+    uSandDark: { value: new Color(LOGO_COLORS.sandDark) },
+    uGrainLight: { value: new Color(LOGO_COLORS.grainLight) },
+    uGrainDark: { value: new Color(LOGO_COLORS.grainDark) },
+    uWetSky: { value: new Color(LOGO_COLORS.wetSky) },
   };
   const ripple = { uShift: { value: 0 }, uChop: { value: 0 } };
 
@@ -121,7 +159,15 @@ uniform vec3 uFoam;
 uniform vec3 uSubmerged;
 uniform vec3 uShallow;
 uniform vec3 uWetSand;
-${shader.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>${FRAGMENTS[role]}`)}`;
+uniform vec3 uSandLight;
+uniform vec3 uSandDark;
+uniform vec3 uGrainLight;
+uniform vec3 uGrainDark;
+uniform vec3 uWetSky;
+${SAND_GLSL}
+${shader.fragmentShader
+  .replace("#include <color_fragment>", `#include <color_fragment>${FRAGMENTS[role]}`)
+  .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>${role === "sand" ? WET_SHEEN_GLSL : ""}`)}`;
     };
     return material;
   };

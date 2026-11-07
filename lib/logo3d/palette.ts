@@ -2,7 +2,12 @@
 export const LOGO_COLORS = {
   name: "#E2620A", // orange, readable on the white header and the dark footer
   sand: "#FFC933", // yellow
-  wetSand: "#F7A21B", // orange
+  sandLight: "#FFD35C",
+  sandDark: "#FBBF2C",
+  grainLight: "#FFEDB0",
+  grainDark: "#D08F1E",
+  wetSky: "#BFE9F2",
+  wetSand: "#CF8A1A", // orange
   star: "#E2262E", // red
   water: "#00A99D", // teal
   shallow: "#3FD1C4",

@@ -9,8 +9,6 @@ import {
 import { buildLogoModel } from "./model";
 
 const CAMERA_DISTANCE = 8.4;
-const SWAY_ANGLE = 0.28;
-const SWAY_SPEED = 0.6;
 const BOB_HEIGHT = 0.04;
 const BOB_SPEED = 1.1;
 const MAX_PIXEL_RATIO = 2;
@@ -73,7 +71,6 @@ export function createLogoScene(canvas: HTMLCanvasElement, animate: boolean): Lo
   const draw = (): void => {
     if (animate) {
       const seconds = (performance.now() - startedAt) / 1000;
-      model.root.rotation.y = SWAY_ANGLE * Math.sin(seconds * SWAY_SPEED);
       model.root.position.y = BOB_HEIGHT * Math.sin(seconds * BOB_SPEED);
       model.animateShore(seconds);
     }
