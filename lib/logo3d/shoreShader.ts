@@ -2,6 +2,8 @@ import { Color, DataTexture, LinearFilter, RGBAFormat, type MeshStandardMaterial
 import { LOGO_COLORS } from "./palette";
 import { shoreState, type ShoreState } from "./shore";
 
+const DISC_CENTRE = 280;
+const DISC_RADIUS = 132.5;
 const WAVE_START_X = 130;
 const WAVE_WIDTH = 300;
 const WAVE_MIN_Y = 240;
@@ -97,9 +99,14 @@ export function createShore(points: Vector2[]): Shore {
     material.onBeforeCompile = (shader) => {
       Object.assign(shader.uniforms, shared, role === "ripple" ? ripple : {});
       if (role === "line" || role === "ripple") {
-        shader.vertexShader = `${CHOP_GLSL}\n${shader.vertexShader.replace(
+        shader.vertexShader = `varying vec2 vSvg;\n${CHOP_GLSL}\n${shader.vertexShader.replace(
           "#include <begin_vertex>",
-          "#include <begin_vertex>\ntransformed.y += uShift + uChop * shoreChop(position.x, uTime);",
+          "#include <begin_vertex>\ntransformed.y += uShift + uChop * shoreChop(position.x, uTime);\nvSvg = transformed.xy;",
+        )}`;
+        // Lines move vertically while the disc edge curves: cut them where they would leave the disc.
+        shader.fragmentShader = `varying vec2 vSvg;\n${shader.fragmentShader.replace(
+          "#include <color_fragment>",
+          `#include <color_fragment>\nif (distance(vSvg, vec2(${DISC_CENTRE.toFixed(1)})) > ${DISC_RADIUS.toFixed(1)}) discard;`,
         )}`;
         return;
       }

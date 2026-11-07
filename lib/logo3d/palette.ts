@@ -1,8 +1,6 @@
 // One tropical palette for the flat logo and the 3D one. The SVG repeats these values by hand.
 export const LOGO_COLORS = {
-  ring: "#0B6B4B", // green
-  text: "#FFD84D", // yellow
-  trim: "#FF8A1E", // orange
+  name: "#E2620A", // orange, readable on the white header and the dark footer
   sand: "#FFC933", // yellow
   wetSand: "#F7A21B", // orange
   star: "#E2262E", // red
