@@ -130,11 +130,13 @@ for (const [width, height] of [[1440, 900], [768, 1024], [390, 844]]) {
       await expect.poll(() => card.locator(".unit-card-media > img").evaluate((el: HTMLImageElement) => el.complete && el.naturalHeight > 0)).toBe(true);
       await expect(caption).toHaveCSS("color", "rgb(255, 255, 255)");
 
-      const box = (await caption.boundingBox())!;
-      await caption.evaluate((el) => (el.style.visibility = "hidden"));
-      const shot = await page.screenshot({ clip: box });
-      await caption.evaluate((el) => (el.style.visibility = ""));
-      expect(await worstWhiteContrast(page, shot)).toBeGreaterThanOrEqual(4.5);
+      for (const text of [caption, card.locator(".unit-card-cue")]) {
+        const box = (await text.boundingBox())!;
+        await text.evaluate((el) => (el.style.visibility = "hidden"));
+        const shot = await page.screenshot({ clip: box });
+        await text.evaluate((el) => (el.style.visibility = ""));
+        expect(await worstWhiteContrast(page, shot)).toBeGreaterThanOrEqual(4.5);
+      }
     }
   });
 }
@@ -201,12 +203,42 @@ test.describe("second photo", () => {
   });
 });
 
-test("shows only the gîte name on the home photos", async ({ page }) => {
+test("shows the gîte name, then an arrow towards its page, on the home photos", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/fr");
   const names = ["Sapotille", "Maracudja", "Carambole"];
   for (const [index, name] of names.entries()) {
-    await expect(cards(page).nth(index)).toHaveText(name);
+    const card = cards(page).nth(index);
+    await expect(card.locator(".unit-card-caption")).toHaveText(name);
+    const cue = card.locator(".unit-card-cue");
+    await expect(cue.locator("svg")).toBeVisible();
+    await expect(cue).toHaveText("");
+    await expect(cue).toHaveCSS("color", "rgb(255, 255, 255)");
+    const caption = (await card.locator(".unit-card-caption").boundingBox())!;
+    expect((await cue.boundingBox())!.y).toBeGreaterThanOrEqual(caption.y + caption.height);
+  }
+});
+
+test("slides the arrow towards the page on hover", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr/gites/sapotille");
+  const card = page.locator(".unit-card").first();
+  const arrow = card.locator(".unit-card-cue svg");
+  await card.scrollIntoViewIfNeeded();
+  const before = (await arrow.boundingBox())!.x;
+  await card.hover();
+  await expect.poll(async () => (await arrow.boundingBox())!.x - before).toBeGreaterThan(3);
+});
+
+test("puts the arrow under each photo of the other gîtes", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const route of ["/fr/gites/sapotille", "/en/gites/sapotille"]) {
+    await page.goto(route);
+    const card = page.locator(".unit-card").first();
+    await expect(card.locator(".unit-card-cue svg")).toBeVisible();
+    await expect(page.getByText(/Voir le gîte|View the gîte/)).toHaveCount(0);
+    const photo = (await card.locator(".unit-card-frame").boundingBox())!;
+    expect((await card.locator(".unit-card-cue").boundingBox())!.y).toBeGreaterThanOrEqual(photo.y + photo.height);
   }
 });
 

@@ -370,6 +370,39 @@ summary::-webkit-details-marker {
   background: var(--surface-alt);
 }
 
+/* The gîtes menu shows each gîte's first photo above its name. */
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 12rem;
+}
+
+/* The arrow under each gîte name slides towards its page on hover or focus. */
+.cue-arrow svg {
+  transition: translate 300ms ease-out;
+}
+
+.unit-card:hover .cue-arrow svg,
+.unit-card:focus-visible .cue-arrow svg,
+.menu-card:hover .cue-arrow svg,
+.menu-card:focus-visible .cue-arrow svg {
+  translate: 8px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cue-arrow svg {
+    transition: none;
+  }
+}
+
+.menu-card-photo {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+
 body[data-header="solid"] > header {
   border-color: var(--line);
   background: var(--ground);

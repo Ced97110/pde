@@ -6,6 +6,7 @@ import type { Dictionary, Locale } from "@/content/dictionaries";
 import { Dropdown } from "./Dropdown";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { RollingLabel } from "./RollingLabel";
+import { CueArrow } from "./CueArrow";
 
 interface HeaderProps {
   locale: Locale;
@@ -19,6 +20,16 @@ export function Header({ locale, dict }: HeaderProps) {
   const unitLinks = units.map((unit) => (
     <Link key={unit.slug} href={`${base}/gites/${unit.slug}`} className="menu-link">
       {unit.name}
+    </Link>
+  ));
+
+  const unitCards = units.map((unit) => (
+    <Link key={unit.slug} href={`${base}/gites/${unit.slug}`} className="menu-card">
+      <span className="menu-card-photo">
+        <Image src={unit.photos[0]} alt="" fill sizes="192px" loading="eager" className="object-cover" />
+      </span>
+      <span className="label menu-card-name">{unit.name}</span>
+      <CueArrow className="menu-card-cue" />
     </Link>
   ));
 
@@ -38,7 +49,9 @@ export function Header({ locale, dict }: HeaderProps) {
             <a {...beachLinkProps}>
               <RollingLabel text={dict.nav.beach} />
             </a>
-            <Dropdown label={<RollingLabel text={dict.nav.units} />}>{unitLinks}</Dropdown>
+            <Dropdown label={<RollingLabel text={dict.nav.units} />} openOnHover panelClassName="gap-3 p-3">
+              {unitCards}
+            </Dropdown>
             <Link href={contactHref}>
               <RollingLabel text={dict.nav.contact} />
             </Link>

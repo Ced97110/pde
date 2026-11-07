@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Unit } from "@/content/units";
 import { lowestWeeklyRate } from "@/content/pricing";
+import { CueArrow } from "./CueArrow";
 import type { Dictionary, Locale } from "@/content/dictionaries";
 
 type UnitCardLayout = "default" | "portrait" | "landscape";
@@ -39,6 +40,7 @@ interface UnitCardProps {
 
 export function UnitCard({ unit, locale, dict, layout = "default", photoFocus, hoverPhoto, hoverPhotoFocus }: UnitCardProps) {
   const isOverlay = layout !== "default";
+  const cue = <CueArrow className="unit-card-cue mt-3" />;
 
   return (
     <Link href={`/${locale}/gites/${unit.slug}`} className={`unit-card group block ${CARD_CLASSES[layout]}`}>
@@ -68,7 +70,10 @@ export function UnitCard({ unit, locale, dict, layout = "default", photoFocus, h
         {isOverlay && <div className="unit-card-veil absolute inset-0" />}
       </div>
       {isOverlay ? (
-        <h3 className="unit-card-caption absolute bottom-8 left-[var(--page-margin)] text-white">{unit.name}</h3>
+        <div className="absolute bottom-8 left-[var(--page-margin)] text-white">
+          <h3 className="unit-card-caption">{unit.name}</h3>
+          {cue}
+        </div>
       ) : (
         <div className="mt-4">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4">
@@ -81,6 +86,7 @@ export function UnitCard({ unit, locale, dict, layout = "default", photoFocus, h
             {unit.surfaceAreaM2} {dict.units.surface} · {unit.capacity} {dict.units.capacity} ·{" "}
             {unit.seaView ? dict.units.seaView : dict.units.noSeaView}
           </p>
+          <div className="text-persienne">{cue}</div>
         </div>
       )}
     </Link>

@@ -52,12 +52,54 @@ test.describe("desktop", () => {
     const links = nav(page).locator("details a");
     await expect(links.first()).toBeHidden();
     await unitsMenu(page).click();
-    await expect(links).toHaveText(["Sapotille", "Maracudja", "Carambole"]);
+    await expect(links.locator(".menu-card-name")).toHaveText(["Sapotille", "Maracudja", "Carambole"]);
     await expect(links.first()).toHaveCSS("color", "rgb(6, 42, 44)");
     await links.nth(2).click();
     await expect(page).toHaveURL(/\/fr\/gites\/carambole$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Carambole");
     await expect(links.first()).toBeHidden();
+  });
+
+  test("opens a gallery of the gîtes on hover", async ({ page }) => {
+    await page.goto("/fr/tarifs");
+    const cards = nav(page).locator("details a");
+    await unitsMenu(page).hover();
+    await expect(cards.locator(".menu-card-name")).toHaveText(["Sapotille", "Maracudja", "Carambole"]);
+    for (const card of await cards.all()) {
+      const photo = (await card.locator("img").boundingBox())!;
+      const cue = card.locator(".menu-card-cue");
+      await expect(cue.locator("svg")).toBeVisible();
+      await expect(cue).toHaveText("");
+      expect((await cue.boundingBox())!.y).toBeGreaterThanOrEqual(photo.y + photo.height);
+    }
+    const boxes = await Promise.all((await cards.locator("img").all()).map(async (image) => {
+      await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0)).toBe(true);
+      return (await image.boundingBox())!;
+    }));
+    boxes.forEach((box, index) => {
+      expect(box.width).toBeGreaterThanOrEqual(160);
+      expect(box.y).toBe(boxes[0].y);
+      if (index > 0) expect(box.x).toBeGreaterThan(boxes[index - 1].x + boxes[index - 1].width);
+    });
+    expect(boxes[2].x + boxes[2].width).toBeLessThanOrEqual(1440 - 48);
+  });
+
+  test("keeps the gallery open on the way to a photo, and closes it once the pointer leaves", async ({ page }) => {
+    await page.goto("/fr/tarifs");
+    const cards = nav(page).locator("details a");
+    await unitsMenu(page).hover();
+    const target = (await cards.nth(1).boundingBox())!;
+    await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 });
+    await expect(cards.nth(1)).toBeVisible();
+    await page.mouse.move(200, 600, { steps: 6 });
+    await expect(cards.first()).toBeHidden();
+  });
+
+  test("still opens the language menu on click only", async ({ page }) => {
+    await page.goto("/fr/tarifs");
+    await languageMenu(page).hover();
+    await page.waitForTimeout(300);
+    await expect(banner(page).getByRole("link", { name: "English" })).toBeHidden();
   });
 
   test("closes a dropdown with Escape and on an outside click", async ({ page }) => {
