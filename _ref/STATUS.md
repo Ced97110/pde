@@ -139,3 +139,13 @@ Date: 2026-11-06. awwwards-mcp 1.18.0, launched through npx.
 
 ## Section 4 title reveal (2026-11-06)
 - On request: "Trois gîtes, une plage" reveals word by word with the scroll. revealWords in lib/motion.ts is shared with the manifesto; components/ScrollWords.tsx.
+
+## No parallax, no transition (2026-11-06)
+- All parallax removed on request: manifesto pictures, beach photo, gîte photos (UnitParallax). The beach is a plain photo, with no reveal.
+- Rising tide, moving sea, water strips and tide outlines were built, then removed on request.
+- Manifesto text and "Trois gîtes, une plage" centred on request, manifesto column capped at 48rem.
+- On request: the gîtes section covers the sticky beach photo, which drifts slower. BeachParallax is back with this behaviour. .beach-stage limits the sticking to that one section.
+
+## Hero after Hotel du Tasso (2026-11-06)
+- On request, composition taken from hoteldutassosorrento.com (Awwwards nominee, slug hotel-du-tasso), own assets only: pale frame, white panel, small photo top left, tall video right, title bottom left, panel opening at the intro. Phone: full-screen video, centred title. No logo, copy, photo or font taken from it. No scroll-down button: the hero stays title-only.
+- Header logo doubled to 128px on the hero only, back to 64px in the solid header and on the other pages.

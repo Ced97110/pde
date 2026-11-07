@@ -22,10 +22,10 @@ test.describe("desktop", () => {
     const logo = await banner(page).locator(".header-logo").boundingBox();
     const menu = await nav(page).boundingBox();
     const book = await banner(page).getByRole("link", { name: "Réserver" }).boundingBox();
-    expect(Math.round(language!.x)).toBe(48);
+    expect(Math.round(language!.x)).toBe(84);
     expect(menu!.x).toBeGreaterThan(logo!.x + logo!.width);
     expect(book!.x).toBeGreaterThan(menu!.x + menu!.width - 1);
-    expect(Math.round(book!.x + book!.width)).toBe(1392);
+    expect(Math.round(book!.x + book!.width)).toBe(1356);
     expect(Math.round(logo!.x + logo!.width / 2)).toBe(720);
   });
 

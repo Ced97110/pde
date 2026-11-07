@@ -51,7 +51,7 @@ export function Manifesto({ text }: ManifestoProps) {
   return (
     <section
       ref={rootRef}
-      className="manifesto relative flex min-h-[80svh] items-center justify-end overflow-hidden px-[var(--page-margin)]"
+      className="manifesto relative flex min-h-[80svh] items-center justify-center overflow-hidden px-[var(--page-margin)]"
     >
       <div className="manifesto-shell manifesto-picture" aria-hidden="true">
         <Image src="/images/decor/coquillage.webp" alt="" width={808} height={586} sizes="(min-width: 768px) 20vw, 30vw" />
@@ -59,7 +59,7 @@ export function Manifesto({ text }: ManifestoProps) {
       <div className="manifesto-star manifesto-picture" aria-hidden="true">
         <Image src="/images/decor/etoile-de-mer.webp" alt="" width={871} height={846} sizes="(min-width: 768px) 20vw, 30vw" />
       </div>
-      <p className="relative text-right">
+      <p className="relative max-w-[48rem] text-center">
         {text.split(" ").map((word, index) => (
           <Fragment key={index}>
             <span className="manifesto-word reveal-word">{word}</span>{" "}

@@ -9,36 +9,73 @@ import { ensureRollEase, ROLL_EASE } from "@/lib/motion";
 // Early enough that the header never crosses the hero text on its way out.
 const HEADER_SOLID_AT = "bottom 40%";
 
-// The title opens at the centre of the screen, then settles at the bottom as the video opens.
-function playIntro(onDone: () => void): SplitText | null {
-  const title = document.querySelector<HTMLElement>(".hero-title");
-  if (!title) return null;
+const WIDE_SCREEN = "(min-width: 1024px)";
+const HEADER = "body > header";
 
-  const box = title.getBoundingClientRect();
-  const fadeTargets = ["body > header"];
-  const split = SplitText.create(title, { type: "words,chars" });
+function revealTitle(title: HTMLElement): SplitText {
+  return SplitText.create(title, { type: "words,chars" });
+}
 
-  gsap.set(title, { y: (window.innerHeight - box.height) / 2 - box.top });
-  gsap.set(".hero", { backgroundImage: "none" });
-  gsap.set(".hero-media", { clipPath: "inset(50% 50% round 32px)" });
-  gsap.set(fadeTargets, { autoAlpha: 0 });
+function revealChars(split: SplitText) {
+  return { targets: split.chars, vars: { y: "0.5em", autoAlpha: 0, duration: 0.8, stagger: { amount: 0.5 } } };
+}
+
+// The white panel fills the hero, then opens into its frame as the pictures rise and the title appears.
+function playFramedIntro(title: HTMLElement, onDone: () => void): SplitText {
+  const split = revealTitle(title);
+  const pictures = [".hero-photo", ".hero-media"];
+  gsap.set(".hero-panel", { inset: 0 });
+  gsap.set(pictures, { clipPath: "inset(100% 0% 0% 0%)", y: 60 });
+  gsap.set(HEADER, { autoAlpha: 0 });
   delete document.documentElement.dataset.heroIntro;
 
+  const chars = revealChars(split);
+  gsap
+    .timeline({
+      defaults: { ease: "expo.out" },
+      onComplete: () => {
+        split.revert();
+        gsap.set([".hero-panel", ...pictures, HEADER], { clearProps: "all" });
+        onDone();
+      },
+    })
+    .from(chars.targets, chars.vars, 0.2)
+    .to(pictures, { clipPath: "inset(0% 0% 0% 0%)", y: 0, duration: 1.6, stagger: 0.25 }, 0.3)
+    .to(".hero-panel", { inset: "var(--hero-frame)", duration: 1.8 }, 0.6)
+    .to(HEADER, { autoAlpha: 1, duration: 0.6, ease: "none" }, 1.2);
+
+  return split;
+}
+
+// The title opens at the centre of the screen as the video opens.
+function playFullScreenIntro(title: HTMLElement, onDone: () => void): SplitText {
+  const split = revealTitle(title);
+  gsap.set(".hero", { backgroundImage: "none" });
+  gsap.set(".hero-media", { clipPath: "inset(50% 50% round 32px)" });
+  gsap.set(HEADER, { autoAlpha: 0 });
+  delete document.documentElement.dataset.heroIntro;
+
+  const chars = revealChars(split);
   gsap
     .timeline({
       defaults: { ease: ROLL_EASE },
       onComplete: () => {
         split.revert();
-        gsap.set([title, ".hero", ".hero-media", ...fadeTargets], { clearProps: "all" });
+        gsap.set([".hero", ".hero-media", HEADER], { clearProps: "all" });
         onDone();
       },
     })
-    .from(split.chars, { y: "0.5em", autoAlpha: 0, duration: 0.8, stagger: { amount: 0.5 } }, 0)
-    .to(title, { y: 0, duration: 0.8 }, 1.4)
+    .from(chars.targets, chars.vars, 0)
     .to(".hero-media", { clipPath: "inset(0% 0% round 0px)", duration: 0.8 }, 1.4)
-    .to(fadeTargets, { autoAlpha: 1, duration: 0.4, ease: "none" }, 1.8);
+    .to(HEADER, { autoAlpha: 1, duration: 0.4, ease: "none" }, 1.8);
 
   return split;
+}
+
+function playIntro(onDone: () => void): SplitText | null {
+  const title = document.querySelector<HTMLElement>(".hero-title");
+  if (!title) return null;
+  return window.matchMedia(WIDE_SCREEN).matches ? playFramedIntro(title, onDone) : playFullScreenIntro(title, onDone);
 }
 
 export function HeroIntro() {

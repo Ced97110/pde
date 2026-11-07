@@ -5,7 +5,8 @@ test("redirects the bare domain to the default French locale", async ({ page }) 
   await expect(page).toHaveURL(/\/fr$/);
 });
 
-test("plays the muted hero video across the whole hero", async ({ page }) => {
+test("plays the muted hero video across the whole hero on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/fr");
   const video = page.locator("video.hero-video");
 

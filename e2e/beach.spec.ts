@@ -1,11 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 
 const section = (page: Page) => page.locator(".beach");
-const plane = (page: Page) => page.locator(".beach-plane");
-const media = (page: Page) => page.locator(".beach-media");
+const units = (page: Page) => page.locator("#gites");
 
 const translateY = (page: Page) =>
-  media(page).evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).m42);
+  page.locator(".beach-media").evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).m42);
 
 const scrollSection = async (page: Page, viewportRatio: number) => {
   const top = await section(page).evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
@@ -19,7 +18,7 @@ const waitForIntro = (page: Page) =>
 
 test("removes the shutter and the WebGL story", async ({ page }) => {
   await page.goto("/fr");
-  await expect(page.locator(".shutter, .shutter-slats, .slats, .story, main canvas")).toHaveCount(0);
+  await expect(page.locator(".shutter, .shutter-slats, .slats, .story")).toHaveCount(0);
   await expect(page.getByText("On pousse le portail.")).toHaveCount(0);
   await expect(page.getByText("On suit le chemin.")).toHaveCount(0);
 });
@@ -33,8 +32,8 @@ test.describe("layout at 1440px", () => {
 
   test("sits between the manifesto and the gîtes", async ({ page }) => {
     const order = await page.evaluate(() => {
-      const beach = document.querySelector(".beach");
-      return [beach?.previousElementSibling?.classList.contains("manifesto"), beach?.nextElementSibling?.id];
+      const stage = document.querySelector(".beach")?.parentElement;
+      return [stage?.previousElementSibling?.classList.contains("manifesto"), stage?.nextElementSibling?.id];
     });
     expect(order).toEqual([true, "gites"]);
   });
@@ -52,46 +51,64 @@ test.describe("layout at 1440px", () => {
     await expect(page.getByText("La plage du bourg de Sainte-Anne.")).toHaveCount(0);
   });
 
-  test("keeps the photo open and still under reduced motion", async ({ page }) => {
-    await scrollSection(page, 0);
-    expect(await translateY(page)).toBe(0);
-    await expect(plane(page)).toHaveCSS("clip-path", "none");
-  });
 });
 
 for (const [width, height] of [[1440, 900], [390, 844]]) {
-  test(`moves the photo with the scroll without uncovering it at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height });
-    await page.goto("/fr");
-    await waitForIntro(page);
-    const positions: number[] = [];
-    for (const ratio of [0.9, 0.5, 0, -0.5]) {
-      await scrollSection(page, ratio);
-      positions.push(await translateY(page));
-      const [outer, inner] = await Promise.all([section(page).boundingBox(), media(page).boundingBox()]);
-      expect(inner!.y).toBeLessThanOrEqual(outer!.y);
-      expect(inner!.y + inner!.height).toBeGreaterThanOrEqual(outer!.y + outer!.height);
-    }
-    expect(positions[1]).toBeGreaterThan(positions[0]);
-    expect(positions[2]).toBeGreaterThan(positions[1]);
-    expect(positions[3]).toBeGreaterThan(positions[2]);
-    expect(positions[3] - positions[0]).toBeGreaterThan(100);
+  test.describe(`covered by the next section at ${width}px`, () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/fr");
+      await waitForIntro(page);
+    });
+
+    test("holds the photo in place while the gîtes rise over it", async ({ page }) => {
+      await scrollSection(page, -0.5);
+      expect(Math.round((await section(page).boundingBox())!.y)).toBe(0);
+      expect(Math.round((await units(page).boundingBox())!.y)).toBe(height / 2);
+      await scrollSection(page, -1);
+      expect(Math.round((await units(page).boundingBox())!.y)).toBeLessThanOrEqual(0);
+    });
+
+    test("moves the photo slower than the section covering it", async ({ page }) => {
+      await scrollSection(page, 0);
+      expect(await translateY(page)).toBe(0);
+      await scrollSection(page, -0.5);
+      const midway = await translateY(page);
+      await scrollSection(page, -1);
+      const end = await translateY(page);
+      expect(midway).toBeLessThan(0);
+      expect(end).toBeLessThan(midway);
+      expect(Math.abs(end)).toBeLessThan(height * 0.2);
+    });
+
+    test("never uncovers the bottom of the frame", async ({ page }) => {
+      await scrollSection(page, -1);
+      const photo = (await page.locator(".beach-media").boundingBox())!;
+      expect(photo.y + photo.height).toBeGreaterThanOrEqual(height);
+    });
+
+    test("stays behind the gîtes only, and never shows under the next sections", async ({ page }) => {
+      await page.locator(".host").evaluate((el) => window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: "instant" }));
+      await page.waitForTimeout(300);
+      const beach = (await section(page).boundingBox())!;
+      expect(beach.y + beach.height).toBeLessThanOrEqual(0);
+    });
   });
 }
 
-test("unveils the photo from the top down while it widens to the full screen", async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
+test("gives the covering section an opaque background", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/fr");
-  await waitForIntro(page);
-  await scrollSection(page, 0.6);
-  const clip = await plane(page).evaluate((el) => getComputedStyle(el).clipPath);
-  const [top, right = top, bottom = top, left = right] = (clip.match(/[\d.]+/g) ?? []).map(Number);
-  expect(top).toBe(0);
-  expect(right).toBeGreaterThan(0);
-  expect(left).toBe(right);
-  expect(bottom).toBeGreaterThan(0);
-  await scrollSection(page, 0);
-  await expect(plane(page)).toHaveCSS("clip-path", "none");
+  await expect(units(page)).toHaveCSS("background-color", "rgb(255, 255, 255)");
+});
+
+test("keeps the photo still under reduced motion, while still being covered", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/fr");
+  await scrollSection(page, -0.5);
+  expect(await translateY(page)).toBe(0);
+  expect(Math.round((await units(page).boundingBox())!.y)).toBe(450);
 });
 
 test("is translated", async ({ page }) => {

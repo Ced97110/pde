@@ -221,16 +221,112 @@ h3,
   background: var(--persienne) url("/videos/hero-poster.jpg") center / cover no-repeat;
 }
 
+.hero-title {
+  text-align: center;
+}
+
+/* Twice the size on the hero only: the 80px solid header cannot hold it.
+   The link keeps its 64px, so the logo overflows it evenly and the header columns stay centred. */
+body:has(.hero):not([data-header="solid"]) > header a:has(.header-logo) {
+  align-self: start;
+  width: 64px;
+  padding-top: 0.5rem;
+}
+
+body:has(.hero):not([data-header="solid"]) .header-logo {
+  width: 128px;
+  height: 128px;
+  max-width: none;
+  margin-inline: -32px;
+}
+
+/* The doubled logo needs this room between the menu items on small laptops. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  body:has(.hero):not([data-header="solid"]) > header nav,
+  body:has(.hero):not([data-header="solid"]) > header .justify-end {
+    gap: 0.75rem;
+  }
+}
+
+.hero-panel,
+.hero-photo {
+  display: none;
+}
+
+/* The framed composition needs width: a phone keeps the video full screen. */
+@media (min-width: 1024px) {
+  :root {
+    --hero-frame: 2.5vw;
+  }
+
+  .hero {
+    height: 100svh;
+    background: #e2f4f2;
+    color: var(--ink);
+  }
+
+  .hero-panel {
+    position: absolute;
+    inset: var(--hero-frame);
+    display: block;
+    background: var(--ground);
+  }
+
+  .hero-photo {
+    position: absolute;
+    top: calc(var(--hero-frame) + 5rem + 0.5rem);
+    left: 7.5vw;
+    display: block;
+    width: min(12.5vw, 20svh);
+    aspect-ratio: 5 / 7;
+    overflow: hidden;
+  }
+
+  .hero-media.hero-media {
+    inset: auto calc(var(--hero-frame) + 2.5vw) calc(var(--hero-frame) + 2svh) auto;
+    width: calc(min(35vw, 56svh) * 5 / 7);
+    aspect-ratio: 5 / 7;
+    overflow: hidden;
+  }
+
+  .hero-veil {
+    display: none;
+  }
+
+  .hero-copy {
+    position: absolute;
+    bottom: calc(var(--hero-frame) + 9svh);
+    left: 7.5vw;
+    width: 44vw;
+    padding: 0;
+  }
+
+  .hero-title {
+    text-align: left;
+  }
+
+  body:has(.hero):not([data-header="solid"]) > header {
+    inset: var(--hero-frame) var(--hero-frame) auto;
+    color: var(--ink);
+  }
+}
+
 /* The inline bootstrap hides these before paint; the delayed reveal covers a failed intro. */
 html[data-hero-intro="pending"] .hero {
   background-image: none;
 }
 
 html[data-hero-intro="pending"] .hero-media,
+html[data-hero-intro="pending"] .hero-photo,
 html[data-hero-intro="pending"] .hero-title,
 html[data-hero-intro="pending"] body > header {
   visibility: hidden;
   animation: hero-failsafe 0s 3s forwards;
+}
+
+/* The panel starts over the whole hero, before opening into its frame. */
+html[data-hero-intro="pending"] .hero-panel {
+  inset: 0;
 }
 
 @keyframes hero-failsafe {
@@ -288,6 +384,11 @@ body:has(.hero):not([data-header="solid"]) > header summary {
   border-color: currentColor;
 }
 
+/* As wide as its label: otherwise the empty space beside it opens the menu. */
+summary {
+  width: fit-content;
+}
+
 summary::-webkit-details-marker {
   display: none;
 }
@@ -330,9 +431,20 @@ body[data-header="solid"] > header {
   left: 0;
 }
 
+/* The stage ends one screen below the photo, so the photo only sticks while the next section covers it.
+   Without this limit it would stay behind every later section. */
+.beach-stage {
+  height: 200svh;
+}
+
+.beach-cover {
+  z-index: 1;
+  margin-top: -100svh;
+}
+
 .beach-media {
   position: absolute;
-  inset: -15% 0;
+  inset: 0 0 -15% 0;
 }
 
 /* Plain veil: gradients are banned. Value set by e2e/units.spec.ts, which measures 4.5:1 on the real photos. */
@@ -361,13 +473,6 @@ body[data-header="solid"] > header {
 @media (prefers-reduced-motion: reduce) {
   .unit-card-alt {
     transition: none;
-  }
-}
-
-/* Overflow matches the travel set in UnitParallax, so the frame is always covered. */
-@media (min-width: 768px) {
-  .units-grid .unit-card-media {
-    inset: -35px 0 -53px;
   }
 }
 

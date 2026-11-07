@@ -10,19 +10,27 @@ const settle = async (page: Page, scrollY: number) => {
   await page.waitForTimeout(400);
 };
 
-test("sits right after the hero, right-aligned on the page margin", async ({ page }) => {
+test("sits right after the hero, centred in a narrow column", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/fr");
   const manifesto = page.locator(".manifesto");
   await expect(manifesto.locator("p")).toHaveText(SENTENCE);
-  const isAfterHero = await page.evaluate(
+  expect(await page.evaluate(
     () => document.querySelector(".hero")?.nextElementSibling?.classList.contains("manifesto"),
-  );
-  expect(isAfterHero).toBe(true);
-  const text = await manifesto.locator("p").boundingBox();
-  expect(Math.round(1440 - (text!.x + text!.width))).toBe(48);
-  await expect(manifesto.locator("p")).toHaveCSS("text-align", "right");
+  )).toBe(true);
+  await expect(manifesto.locator("p")).toHaveCSS("text-align", "center");
+  const text = (await manifesto.locator("p").boundingBox())!;
+  expect(text.width).toBeLessThanOrEqual(768);
+  expect(Math.abs(text.x + text.width / 2 - 720)).toBeLessThan(1);
+});
+
+test("uses the full width of a phone, between the page margins", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/fr");
+  const text = (await page.locator(".manifesto p").boundingBox())!;
+  expect(Math.round(text.width)).toBe(358);
 });
 
 test("is translated", async ({ page }) => {
@@ -178,3 +186,19 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [1024, 768], [768, 102
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
+
+test("does not move the pictures at a different speed from the text", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  await expect(page.locator("html")).not.toHaveAttribute("data-hero-intro", /.+/, { timeout: 3_000 });
+
+  const positions = () => Promise.all([shell(page), page.locator(".manifesto p"), star(page)].map(async (layer) => (await layer.boundingBox())!.y));
+  await scrollSection(page, -0.1);
+  const before = await positions();
+  await scrollSection(page, -0.3);
+  const after = await positions();
+  const [shellTravel, textTravel, starTravel] = before.map((y, index) => Math.round(y - after[index]));
+  expect(textTravel).toBe(180);
+  expect(shellTravel).toBe(180);
+  expect(starTravel).toBe(180);
+});

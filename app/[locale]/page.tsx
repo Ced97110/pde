@@ -6,14 +6,13 @@ import { units, type UnitSlug } from "@/content/units";
 import { reviews } from "@/content/reviews";
 import { policies } from "@/content/pricing";
 import { business } from "@/content/business";
-import { BeachParallax } from "@/components/BeachParallax";
 import { HeroIntro } from "@/components/HeroIntro";
+import { BeachParallax } from "@/components/BeachParallax";
 import { Manifesto } from "@/components/Manifesto";
 import { ReviewCard } from "@/components/ReviewCard";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ScrollWords } from "@/components/ScrollWords";
 import { UnitCard } from "@/components/UnitCard";
-import { UnitParallax } from "@/components/UnitParallax";
 import { HERO_INTRO_BOOTSTRAP } from "@/lib/hero-intro";
 import { typographic } from "@/lib/typography";
 
@@ -24,6 +23,7 @@ const UNIT_CARD_PHOTOS: Record<UnitSlug, { focus: string; hoverIndex: number; ho
   maracudja: { focus: "62% 50%", hoverIndex: 2, hoverFocus: "45% 50%" },
   carambole: { focus: "72% 50%", hoverIndex: 1, hoverFocus: "60% 50%" },
 };
+const HERO_PHOTO = "/images/gallery/2026-10-14-52.jpg";
 const BEACH_PHOTO = "/images/plage-sainte-anne.webp";
 const HOST_PHOTO = "/images/gallery/2026-10-31-24.jpg";
 const PRESENTATION_PHOTOS = [
@@ -43,10 +43,14 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       <HeroIntro />
       <ScrollReveal />
 
-      <section className="hero relative flex min-h-svh items-end overflow-hidden text-white">
+      <section className="hero relative flex min-h-svh items-center justify-center overflow-hidden text-white">
+        <div className="hero-panel" />
+        <div className="hero-photo">
+          <Image src={HERO_PHOTO} alt="" fill sizes="20vw" className="object-cover object-[25%_50%]" />
+        </div>
         <div className="hero-media absolute inset-0">
           <video
-            className="hero-video absolute inset-0 h-full w-full object-cover"
+            className="hero-video absolute inset-0 h-full w-full object-cover object-[50%_50%] lg:object-[14%_50%]"
             autoPlay
             loop
             muted
@@ -58,11 +62,11 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             <source src="/videos/hero.webm" type="video/webm" />
             <source src="/videos/hero.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-black/55" />
+          <div className="hero-veil absolute inset-0 bg-black/55" />
         </div>
 
-        <div className="relative w-full px-[var(--page-margin)] pb-10 sm:pb-12">
-          <h1 className="hero-title max-w-5xl">{dict.hero.subtitle}</h1>
+        <div className="hero-copy relative w-full px-[var(--page-margin)]">
+          <h1 className="hero-title">{dict.hero.subtitle}</h1>
         </div>
       </section>
 
@@ -70,9 +74,8 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
       <BeachParallax src={BEACH_PHOTO} alt={dict.home.beachPhotoAlt} />
 
-      <section id="gites" className="pt-20 sm:pt-28">
-        <UnitParallax />
-        <ScrollWords text={dict.home.unitsTitle} className="section-title px-[var(--page-margin)] text-right text-persienne" />
+      <section id="gites" className="beach-cover relative bg-background pt-20 sm:pt-28">
+        <ScrollWords text={dict.home.unitsTitle} className="section-title px-[var(--page-margin)] text-center text-persienne" />
         <div className="units-grid mt-12 grid md:grid-cols-2">
           {units.map((unit, index) => (
             <UnitCard

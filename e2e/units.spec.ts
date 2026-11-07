@@ -22,12 +22,13 @@ test.describe("layout at 1440px", () => {
     await page.goto("/fr");
   });
 
-  test("right-aligns the title on the page margin, without the intro paragraph", async ({ page }) => {
+  test("centres the title, without the intro paragraph", async ({ page }) => {
     const title = page.locator("#gites h2");
     await expect(title).toHaveText("Trois gîtes, une plage");
-    await expect(title).toHaveCSS("text-align", "right");
-    const margin = await title.evaluate((el) => parseFloat(getComputedStyle(el).paddingRight));
-    expect(Math.round(margin)).toBe(48);
+    await expect(title).toHaveCSS("text-align", "center");
+    const words = await title.locator(".reveal-word").evaluateAll((spans) => spans.map((span) => span.getBoundingClientRect()));
+    const middle = (words[0].left + words.at(-1)!.right) / 2;
+    expect(Math.abs(middle - 720)).toBeLessThan(2);
     await expect(page.locator("#gites > p, #gites > div > p")).toHaveCount(0);
   });
 
@@ -63,23 +64,17 @@ test.describe("layout at 1440px", () => {
   });
 });
 
-test("moves the images with the scroll and never uncovers the frame", async ({ page }) => {
+test("scrolls the images with the page, without parallax", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/fr");
-  await expect(page.locator("html")).not.toHaveAttribute("data-hero-intro", /.+/, { timeout: 3_000 });
-
-  const card = cards(page).nth(1);
-  const positions: number[] = [];
-  for (const ratio of [0.98, 0.5, -0.4]) {
-    await scrollToCard(page, card, ratio);
-    positions.push(await translateY(media(card)));
+  const card = cards(page).first();
+  for (const offset of [-500, 0, 500]) {
+    await card.evaluate((el, by) => window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY + by, behavior: "instant" }), offset);
+    await page.waitForTimeout(200);
+    expect(await translateY(media(card))).toBe(0);
     const [outer, inner] = await Promise.all([frame(card).boundingBox(), media(card).boundingBox()]);
-    expect(inner!.y).toBeLessThanOrEqual(outer!.y);
-    expect(inner!.y + inner!.height).toBeGreaterThanOrEqual(outer!.y + outer!.height);
+    expect(inner).toEqual(outer);
   }
-  expect(positions[0]).toBeGreaterThan(positions[1]);
-  expect(positions[1]).toBeGreaterThan(positions[2]);
-  expect(positions[0] - positions[2]).toBeGreaterThan(40);
 });
 
 test("keeps the images still under reduced motion", async ({ page }) => {
