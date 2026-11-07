@@ -43,12 +43,6 @@ export function Header({ locale, dict }: HeaderProps) {
               <RollingLabel text={dict.nav.contact} />
             </Link>
           </nav>
-          <div className="hidden lg:block">
-            <Link href={contactHref} className="btn btn-primary !py-2 text-sm">
-              <RollingLabel text={dict.nav.book} />
-            </Link>
-          </div>
-
           <Dropdown label={dict.nav.menu} className="lg:hidden" summaryClassName="rounded border border-line px-3 text-sm">
             <a {...beachLinkProps} className="menu-link">
               {dict.nav.beach}
@@ -57,9 +51,6 @@ export function Header({ locale, dict }: HeaderProps) {
             {unitLinks}
             <Link href={contactHref} className="menu-link">
               {dict.nav.contact}
-            </Link>
-            <Link href={contactHref} className="btn btn-primary mt-2">
-              {dict.nav.book}
             </Link>
           </Dropdown>
         </div>

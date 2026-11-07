@@ -5,6 +5,8 @@ const SITE_BACKGROUND = "rgb(255, 255, 255)";
 // Measured on kubehotel-saint-tropez.com at 1440px.
 const TYPE_SCALE = [43, 36.67, 30.33, 23.17, 14, 12];
 const WEIGHTS = ["300", "500"];
+// Dark ink, or white on the hero photos.
+const BUTTON_FILLS = ["rgb(6, 42, 44)", "rgb(255, 255, 255)"];
 
 async function audit(page: Page) {
   return page.evaluate(() => {
@@ -64,8 +66,8 @@ for (const route of ROUTES) {
     });
 
     test("has no orange or beige button", async ({ page }) => {
-      const button = page.locator(".btn-primary").first();
-      await expect(button).toHaveCSS("background-color", "rgb(6, 42, 44)");
+      const fills = await page.locator(".btn").evaluateAll((buttons) => buttons.map((button) => getComputedStyle(button).backgroundColor));
+      fills.forEach((fill) => expect(BUTTON_FILLS).toContain(fill));
     });
   });
 }

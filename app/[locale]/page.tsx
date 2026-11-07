@@ -10,6 +10,7 @@ import { HeroIntro } from "@/components/HeroIntro";
 import { BeachParallax } from "@/components/BeachParallax";
 import { Manifesto } from "@/components/Manifesto";
 import { ReviewCard } from "@/components/ReviewCard";
+import { RollingLabel } from "@/components/RollingLabel";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ScrollWords } from "@/components/ScrollWords";
 import { UnitCard } from "@/components/UnitCard";
@@ -23,7 +24,10 @@ const UNIT_CARD_PHOTOS: Record<UnitSlug, { focus: string; hoverIndex: number; ho
   maracudja: { focus: "62% 50%", hoverIndex: 2, hoverFocus: "45% 50%" },
   carambole: { focus: "72% 50%", hoverIndex: 1, hoverFocus: "60% 50%" },
 };
-const HERO_PHOTO = "/images/gallery/2026-10-14-52.jpg";
+const HERO_SLIDES = [
+  { src: "/images/hero/plage.jpg", focus: "object-[50%_60%]" },
+  { src: "/images/hero/allee.jpg", focus: "object-[50%_50%]" },
+];
 const BALCONY_PHOTO = "/images/chambre-balcon.webp";
 const HOST_PHOTO = "/images/gallery/2026-10-31-24.jpg";
 const PRESENTATION_PHOTOS = [
@@ -44,29 +48,27 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
       <ScrollReveal />
 
       <section className="hero relative flex min-h-svh items-center justify-center overflow-hidden text-white">
-        <div className="hero-panel" />
-        <div className="hero-photo">
-          <Image src={HERO_PHOTO} alt="" fill sizes="20vw" className="object-cover object-[25%_50%]" />
-        </div>
         <div className="hero-media absolute inset-0">
-          <video
-            className="hero-video absolute inset-0 h-full w-full object-cover object-[50%_50%] lg:object-[14%_50%]"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            poster="/videos/hero-poster.jpg"
-            aria-hidden="true"
-          >
-            <source src="/videos/hero.webm" type="video/webm" />
-            <source src="/videos/hero.mp4" type="video/mp4" />
-          </video>
-          <div className="hero-veil absolute inset-0 bg-black/55" />
+          {HERO_SLIDES.map(({ src, focus }, index) => (
+            <div key={src} className="hero-slide absolute inset-0">
+              <Image
+                src={src}
+                alt=""
+                fill
+                sizes="100vw"
+                className={`object-cover ${focus}`}
+                {...(index === 0 ? { preload: true } : { loading: "eager" as const })}
+              />
+            </div>
+          ))}
+          <div className="absolute inset-0 bg-black/[0.53]" />
         </div>
 
-        <div className="hero-copy relative w-full px-[var(--page-margin)]">
+        <div className="hero-copy relative flex w-full flex-col items-center gap-8 px-[var(--page-margin)]">
           <h1 className="hero-title">{dict.hero.subtitle}</h1>
+          <Link href={`/${locale}/contact`} className="hero-book btn">
+            <RollingLabel text={dict.nav.book} />
+          </Link>
         </div>
       </section>
 

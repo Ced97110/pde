@@ -218,11 +218,14 @@ h3,
 }
 
 .hero {
-  background: var(--persienne) url("/videos/hero-poster.jpg") center / cover no-repeat;
+  background: var(--persienne);
 }
 
 .hero-title {
+  max-width: 64rem;
+  margin-inline: auto;
   text-align: center;
+  text-wrap: balance;
 }
 
 /* Twice the size on the hero only: the 80px solid header cannot hold it.
@@ -238,6 +241,8 @@ body:has(.hero):not([data-header="solid"]) .header-logo {
   height: 128px;
   max-width: none;
   margin-inline: -32px;
+  /* No single name colour reads on both photos, the white header and the dark footer. */
+  content: url("/brand/logo-pieds-light.svg");
 }
 
 /* The doubled logo needs this room between the menu items on small laptops. */
@@ -248,85 +253,45 @@ body:has(.hero):not([data-header="solid"]) .header-logo {
   }
 }
 
-.hero-panel,
-.hero-photo {
-  display: none;
+/* White, as the primary button's dark fill would sink into the veiled photos. */
+.hero-book {
+  background: #fff;
+  color: var(--ink);
 }
 
-/* The framed composition needs width: a phone keeps the video full screen. */
-@media (min-width: 1024px) {
-  :root {
-    --hero-frame: 2.5vw;
+.hero-book:hover {
+  background: var(--highlight);
+}
+
+/* The second photo fades over the first. Reduced motion stays on the first. */
+.hero-slide + .hero-slide {
+  opacity: 0;
+  animation: hero-crossfade 14s ease-in-out infinite;
+}
+
+@keyframes hero-crossfade {
+  0%,
+  43% {
+    opacity: 0;
   }
 
-  .hero {
-    height: 100svh;
-    background: #e2f4f2;
-    color: var(--ink);
+  50%,
+  93% {
+    opacity: 1;
   }
 
-  .hero-panel {
-    position: absolute;
-    inset: var(--hero-frame);
-    display: block;
-    background: var(--ground);
-  }
-
-  .hero-photo {
-    position: absolute;
-    top: calc(var(--hero-frame) + 5rem + 0.5rem);
-    left: 7.5vw;
-    display: block;
-    width: min(12.5vw, 20svh);
-    aspect-ratio: 5 / 7;
-    overflow: hidden;
-  }
-
-  .hero-media.hero-media {
-    inset: auto calc(var(--hero-frame) + 2.5vw) calc(var(--hero-frame) + 2svh) auto;
-    width: calc(min(35vw, 56svh) * 5 / 7);
-    aspect-ratio: 5 / 7;
-    overflow: hidden;
-  }
-
-  .hero-veil {
-    display: none;
-  }
-
-  .hero-copy {
-    position: absolute;
-    bottom: calc(var(--hero-frame) + 9svh);
-    left: 7.5vw;
-    width: 44vw;
-    padding: 0;
-  }
-
-  .hero-title {
-    text-align: left;
-  }
-
-  body:has(.hero):not([data-header="solid"]) > header {
-    inset: var(--hero-frame) var(--hero-frame) auto;
-    color: var(--ink);
+  100% {
+    opacity: 0;
   }
 }
 
 /* The inline bootstrap hides these before paint; the delayed reveal covers a failed intro. */
-html[data-hero-intro="pending"] .hero {
-  background-image: none;
-}
-
 html[data-hero-intro="pending"] .hero-media,
-html[data-hero-intro="pending"] .hero-photo,
 html[data-hero-intro="pending"] .hero-title,
+html[data-hero-intro="pending"] .hero-book,
 html[data-hero-intro="pending"] body > header {
   visibility: hidden;
   animation: hero-failsafe 0s 3s forwards;
-}
-
-/* The panel starts over the whole hero, before opening into its frame. */
-html[data-hero-intro="pending"] .hero-panel {
-  inset: 0;
 }
 
 @keyframes hero-failsafe {
@@ -491,10 +456,9 @@ body:has(.mobile-booking-bar) footer {
     scroll-behavior: auto;
   }
 
-  .hero-video {
-    display: none;
+  .hero-slide + .hero-slide {
+    animation: none;
   }
-
 }
 
 /* CSS-only lightbox: targeted via #photo-N anchors, no JS needed. */

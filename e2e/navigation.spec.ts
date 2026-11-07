@@ -5,29 +5,6 @@ test("redirects the bare domain to the default French locale", async ({ page }) 
   await expect(page).toHaveURL(/\/fr$/);
 });
 
-test("plays the muted hero video across the whole hero on a phone", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/fr");
-  const video = page.locator("video.hero-video");
-
-  await expect(video).toHaveAttribute("poster", "/videos/hero-poster.jpg");
-  await expect(video).toHaveJSProperty("muted", true);
-  await expect(video).toHaveJSProperty("loop", true);
-  await expect(video).toHaveJSProperty("controls", false);
-  await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.currentTime)).toBeGreaterThan(0.2);
-
-  const videoBox = await video.boundingBox();
-  const heroBox = await page.locator("section.hero").boundingBox();
-  expect(videoBox?.width).toBe(heroBox?.width);
-  expect(videoBox?.height).toBe(heroBox?.height);
-});
-
-test("shows the poster instead of the video under reduced motion", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/fr");
-  await expect(page.locator("video.hero-video")).toBeHidden();
-});
-
 test("navigates from the home page to a unit detail page", async ({ page }) => {
   await page.goto("/fr");
   await page.locator('#gites a[href="/fr/gites/maracudja"]').click();

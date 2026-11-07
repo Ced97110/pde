@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { worstWhiteContrast } from "./contrast";
 
 const TITLE = "Gîtes touristiques en bord de mer, sur la plage du bourg de Sainte-Anne, Guadeloupe";
 
@@ -76,9 +77,7 @@ for (const [route, width] of [["/fr", 1440], ["/fr", 1024], ["/fr", 768], ["/fr"
     await expect(logo).toHaveAttribute("src", /logo-pieds\.svg/);
     const box = await logo.boundingBox();
     expect(Math.abs(box!.x + box!.width / 2 - width / 2)).toBeLessThanOrEqual(1);
-    // On a wide home page, the header sits inside the hero's frame.
-    const frame = route === "/fr" && width >= 1024 ? width * 0.025 : 0;
-    expect(box!.y).toBeLessThan(16 + frame);
+    expect(box!.y).toBeLessThan(16);
     expect(box!.height).toBeGreaterThanOrEqual(60);
   });
 }
@@ -112,10 +111,50 @@ test("translates the hero title", async ({ page }) => {
   );
 });
 
-test("leaves no button or link on the hero, the header carries them", async ({ page }) => {
+for (const [width, height] of [[1440, 900], [390, 844]]) {
+  test(`puts the Réserver button under the title at ${width}px`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width, height });
+    await page.goto("/fr");
+    const button = page.locator(".hero").getByRole("link", { name: "Réserver" });
+    await expect(button).toHaveAttribute("href", "/fr/contact");
+    const title = (await page.locator(".hero-title").boundingBox())!;
+    const box = (await button.boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(title.y + title.height);
+    expect(Math.abs(box.x + box.width / 2 - width / 2)).toBeLessThanOrEqual(1);
+    expect(box.y + box.height).toBeLessThanOrEqual(height);
+  });
+}
+
+test("takes the hero button to the contact form", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/fr");
-  await expect(page.locator(".hero a, .hero .btn")).toHaveCount(0);
+  await page.locator(".hero").getByRole("link", { name: "Réserver" }).click();
+  await expect(page).toHaveURL(/\/fr\/contact$/);
+  await expect(page.getByLabel("Nom complet")).toBeVisible();
+});
+
+test("translates the hero button", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/en");
+  await expect(page.locator(".hero").getByRole("link", { name: "Book" })).toHaveAttribute("href", "/en/contact");
+});
+
+test("removes the Réserver button from the menu, on every page", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const route of ["/fr", "/fr/tarifs"]) {
+    await page.goto(route);
+    await expect(page.getByRole("banner").getByRole("link", { name: "Réserver", includeHidden: true })).toHaveCount(0);
+  }
+});
+
+test("reveals the button with the intro, and never leaves it hidden", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  const button = page.locator(".hero").getByRole("link", { name: "Réserver" });
+  await expect(page.locator("html")).not.toHaveAttribute("data-hero-intro", /.+/, { timeout: 3_000 });
+  await expect(button).toBeVisible({ timeout: 3_000 });
+  await expect(button).toHaveCSS("opacity", "1", { timeout: 3_000 });
 });
 
 test("shows only the title on the hero", async ({ page }) => {
@@ -128,90 +167,112 @@ test("shows only the title on the hero", async ({ page }) => {
 const overlaps = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
-test.describe("framed composition on a wide screen", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/fr");
-  });
+const secondSlide = (page: Page) => page.locator(".hero-slide").nth(1);
 
-  test("sets a white panel inside a pale frame", async ({ page }) => {
-    await expect(page.locator(".hero")).toHaveCSS("background-color", "rgb(226, 244, 242)");
-    await expect(page.locator(".hero-panel")).toHaveCSS("background-color", "rgb(255, 255, 255)");
-    expect(await page.locator(".hero-panel").boundingBox()).toEqual({ x: 36, y: 36, width: 1368, height: 828 });
-  });
+// Holds the cross-fade at one point of its loop, between 0 and 1.
+const holdCarouselAt = (page: Page, progress: number) =>
+  secondSlide(page).evaluate((slide, at) => {
+    const [fade] = slide.getAnimations();
+    fade.pause();
+    fade.currentTime = Number(fade.effect!.getComputedTiming().duration) * at;
+    return getComputedStyle(slide).opacity;
+  }, progress);
 
-  test("places the small photo top left and the tall video on the right", async ({ page }) => {
-    const photo = (await page.locator(".hero-photo").boundingBox())!;
-    expect(photo).toMatchObject({ x: 108, width: 180, height: 252 });
-    expect(photo.y).toBeGreaterThanOrEqual(116);
-    const video = (await page.locator(".hero-media").boundingBox())!;
-    expect(video).toMatchObject({ width: 360, height: 504 });
-    expect(video.x + video.width).toBe(1368);
-    await expect(page.locator(".hero-photo img")).toHaveAttribute("alt", "");
-  });
-
-  test("sets the title bottom left, in dark ink", async ({ page }) => {
-    const title = (await page.locator(".hero-title").boundingBox())!;
-    expect(Math.round(title.x)).toBe(108);
-    expect(title.y).toBeGreaterThan(450);
-    await expect(page.locator(".hero-title")).toHaveCSS("color", "rgb(6, 42, 44)");
-    await expect(page.locator(".hero-title")).toHaveCSS("text-align", "left");
-  });
-
-  test("keeps the header readable, inside the panel", async ({ page }) => {
-    const header = (await page.locator("body > header").boundingBox())!;
-    expect(header).toMatchObject({ x: 36, y: 36, width: 1368 });
-    await expect(page.locator("body > header")).toHaveCSS("color", "rgb(6, 42, 44)");
-  });
-
-  test("gets the normal header back past the hero", async ({ page }) => {
-    await page.evaluate(() => window.scrollTo(0, window.innerHeight + 200));
-    await expect(page.locator("body")).toHaveAttribute("data-header", "solid");
-    await expect(page.locator("body > header")).toHaveCSS("left", "0px");
-    await expect(page.locator("body > header")).toHaveCSS("top", "0px");
-  });
-});
-
-for (const [width, height] of [[1920, 1080], [1440, 900], [1280, 720], [1024, 768]]) {
-  test(`never lets the hero's parts touch at ${width}px`, async ({ page }) => {
+for (const [width, height] of [[1920, 1080], [1440, 900], [1024, 768], [390, 844]]) {
+  test(`covers the whole hero with both photos at ${width}px`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height });
     await page.goto("/fr");
-    const [photo, video, title, panel, header] = await Promise.all(
-      [".hero-photo", ".hero-media", ".hero-title", ".hero-panel", "body > header"].map(async (selector) => (await page.locator(selector).boundingBox())!),
-    );
-    expect(overlaps(photo, title)).toBe(false);
-    expect(overlaps(video, title)).toBe(false);
-    expect(overlaps(photo, video)).toBe(false);
-    expect(overlaps(photo, header)).toBe(false);
-    expect(overlaps(video, header)).toBe(false);
-    for (const part of [photo, video, title]) {
-      expect(part.y + part.height).toBeLessThanOrEqual(panel.y + panel.height);
-      expect(part.x + part.width).toBeLessThanOrEqual(panel.x + panel.width);
+    const hero = (await page.locator(".hero").boundingBox())!;
+    expect(hero).toMatchObject({ x: 0, y: 0, width, height });
+    const slides = page.locator(".hero-slide");
+    await expect(slides).toHaveCount(2);
+    for (const slide of await slides.locator("img").all()) {
+      expect(await slide.boundingBox()).toEqual(hero);
+      await expect(slide).toHaveAttribute("alt", "");
+    }
+    await expect(page.locator(".hero video, .hero-panel, .hero-photo")).toHaveCount(0);
+  });
+}
+
+test("cross-fades between the two photos, in a loop", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  expect(await holdCarouselAt(page, 0.2)).toBe("0");
+  expect(await holdCarouselAt(page, 0.7)).toBe("1");
+  expect(Number(await holdCarouselAt(page, 0.965))).toBeGreaterThan(0);
+  const iterations = await secondSlide(page).evaluate((slide) => slide.getAnimations()[0].effect!.getComputedTiming().iterations);
+  expect(iterations).toBe(Infinity);
+});
+
+test("loads both photos at once, so the fade never reveals an empty slide", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  for (const image of await page.locator(".hero-slide img").all()) {
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0)).toBe(true);
+  }
+});
+
+test("stays on the first photo under reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/fr");
+  await expect(secondSlide(page)).toHaveCSS("opacity", "0");
+  expect(await secondSlide(page).evaluate((slide) => slide.getAnimations().length)).toBe(0);
+});
+
+test("still shows the first photo without JavaScript", async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("http://localhost:3000/fr");
+  await expect(page.locator(".hero-slide img").first()).toBeVisible();
+  await context.close();
+});
+
+test("sets a centred white title and a white header over the photos", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  await expect(page.locator(".hero-title")).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.locator(".hero-title")).toHaveCSS("text-align", "center");
+  await expect(page.locator("body > header")).toHaveCSS("color", "rgb(255, 255, 255)");
+  expect(await page.locator("body > header").boundingBox()).toMatchObject({ x: 0, y: 0, width: 1440 });
+});
+
+for (const [width, height] of [[1440, 900], [390, 844]]) {
+  test(`keeps the header and title readable on both photos at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto("/fr");
+    await expect(page.locator("html")).not.toHaveAttribute("data-hero-intro", /.+/, { timeout: 3_000 });
+    await page.addStyleTag({ content: "body > header, .hero-title { visibility: hidden; }" });
+    for (const progress of [0.2, 0.7]) {
+      await holdCarouselAt(page, progress);
+      const header = await page.screenshot({ clip: { x: 0, y: 0, width, height: 80 } });
+      const title = await page.screenshot({ clip: { x: 0, y: height * 0.35, width, height: height * 0.3 } });
+      expect(await worstWhiteContrast(page, header)).toBeGreaterThanOrEqual(4.5);
+      expect(await worstWhiteContrast(page, title)).toBeGreaterThanOrEqual(3);
     }
   });
 }
 
-test("fills a phone with the video and a centred white title", async ({ page }) => {
+test("whitens the logo's name over the photos only", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/fr");
-  await expect(page.locator(".hero-panel")).toBeHidden();
-  await expect(page.locator(".hero-photo")).toBeHidden();
-  await expect(page.locator(".hero-title")).toHaveCSS("color", "rgb(255, 255, 255)");
-  await expect(page.locator(".hero-title")).toHaveCSS("text-align", "center");
-  expect(await page.locator(".hero-media").boundingBox()).toMatchObject({ x: 0, y: 0, width: 390 });
-});
-
-test("opens the panel into its frame during the intro", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/fr");
-  await page.waitForTimeout(120);
-  const opening = (await page.locator(".hero-panel").boundingBox())!;
-  expect(opening.x).toBeLessThan(36);
-  await expect(page.locator("html")).not.toHaveAttribute("data-hero-intro", /.+/, { timeout: 3_000 });
-  await expect(page.locator(".hero-panel")).toHaveCSS("left", "36px", { timeout: 3_000 });
+  const logo = page.locator("body > header .header-logo");
+  await expect(logo).toHaveCSS("content", /logo-pieds-light\.svg/);
+  await page.evaluate(() => window.scrollTo(0, window.innerHeight + 200));
+  await expect(page.locator("body")).toHaveAttribute("data-header", "solid");
+  await expect(logo).not.toHaveCSS("content", /logo-pieds-light/);
+});
+
+test("gets the normal header back past the hero", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  await page.evaluate(() => window.scrollTo(0, window.innerHeight + 200));
+  await expect(page.locator("body")).toHaveAttribute("data-header", "solid");
+  await expect(page.locator("body > header")).toHaveCSS("left", "0px");
+  await expect(page.locator("body > header")).toHaveCSS("top", "0px");
 });
 
 for (const width of [1440, 1024, 390, 320]) {

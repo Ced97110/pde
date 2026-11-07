@@ -21,11 +21,9 @@ test.describe("desktop", () => {
     const language = await languageMenu(page).boundingBox();
     const logo = await banner(page).locator(".header-logo").boundingBox();
     const menu = await nav(page).boundingBox();
-    const book = await banner(page).getByRole("link", { name: "Réserver" }).boundingBox();
-    expect(Math.round(language!.x)).toBe(84);
+    expect(Math.round(language!.x)).toBe(48);
     expect(menu!.x).toBeGreaterThan(logo!.x + logo!.width);
-    expect(book!.x).toBeGreaterThan(menu!.x + menu!.width - 1);
-    expect(Math.round(book!.x + book!.width)).toBe(1356);
+    expect(Math.round(menu!.x + menu!.width)).toBe(1392);
     expect(Math.round(logo!.x + logo!.width / 2)).toBe(720);
   });
 
@@ -84,18 +82,6 @@ test.describe("desktop", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pricing & conditions");
   });
 
-  test("takes the Réserver button to the contact form", async ({ page }) => {
-    await page.goto("/fr");
-    await banner(page).getByRole("link", { name: "Réserver" }).click();
-    await expect(page).toHaveURL(/\/fr\/contact$/);
-    await expect(page.getByLabel("Nom complet")).toBeVisible();
-  });
-
-  test("translates the button", async ({ page }) => {
-    await page.goto("/en");
-    await expect(banner(page).getByRole("link", { name: "Book" })).toHaveAttribute("href", "/en/contact");
-  });
-
   for (const route of ["/fr", "/fr/gites/sapotille", "/en", "/en/gites/sapotille"]) {
     test(`no longer mentions availability on ${route}`, async ({ page }) => {
       await page.goto(route);
@@ -131,16 +117,13 @@ test.describe("phone", () => {
     expect(menu!.x).toBeGreaterThan(195);
   });
 
-  test("offers the same entries in the menu, Réserver included", async ({ page }) => {
+  test("offers the same entries in the menu", async ({ page }) => {
     await page.goto("/fr");
-    await expect(banner(page).getByRole("link", { name: "Réserver" }).locator("visible=true")).toHaveCount(0);
     await banner(page).getByText("Menu", { exact: true }).click();
-    await expect(banner(page).locator(".btn").locator("visible=true")).toHaveCSS("color", "rgb(255, 255, 255)");
-    for (const name of ["La plage", "Sapotille", "Maracudja", "Carambole", "Contact", "Réserver"]) {
+    for (const name of ["La plage", "Sapotille", "Maracudja", "Carambole", "Contact"]) {
       await expect(banner(page).getByRole("link", { name, exact: true }).locator("visible=true")).toHaveCount(1);
     }
-    await banner(page).getByRole("link", { name: "Réserver" }).locator("visible=true").click();
-    await expect(page).toHaveURL(/\/fr\/contact$/);
+    await expect(banner(page).locator(".btn")).toHaveCount(0);
   });
 });
 

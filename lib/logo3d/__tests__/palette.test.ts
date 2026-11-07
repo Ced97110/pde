@@ -43,6 +43,11 @@ describe("logo palette", () => {
     });
   });
 
+  it("differs from the light logo only by its name colour", () => {
+    const lightLogo = readFileSync("public/brand/logo-pieds-light.svg", "utf8");
+    expect(lightLogo).toBe(flatLogo.replaceAll(LOGO_COLORS.name, "#FFFFFF"));
+  });
+
   it("keeps the name readable on the white header and the dark footer", () => {
     expect(contrast(LOGO_COLORS.name, "#FFFFFF")).toBeGreaterThanOrEqual(3);
     expect(contrast(LOGO_COLORS.name, FOOTER_BACKGROUND)).toBeGreaterThanOrEqual(3);

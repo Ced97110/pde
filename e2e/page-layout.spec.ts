@@ -165,7 +165,7 @@ test("opens the contact page on a short title, the form within reach", async ({ 
 
 test("sets the buttons in the label weight", async ({ page }) => {
   await open(page, "/fr", 1440, 900);
-  await expect(page.getByRole("banner").getByRole("link", { name: "Réserver" })).toHaveCSS("font-weight", "500");
+  await expect(page.locator(".hero").getByRole("link", { name: "Réserver" })).toHaveCSS("font-weight", "500");
 });
 
 for (const route of ["/fr", "/fr/gites/carambole", "/fr/contact", "/fr/tarifs"]) {
