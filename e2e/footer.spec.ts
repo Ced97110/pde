@@ -169,25 +169,29 @@ test.describe("3D logo", () => {
     await footer(page).scrollIntoViewIfNeeded();
     await expect(logo3d(page)).toHaveAttribute("data-ready", "true", { timeout: 15_000 });
     const png = (await logo3d(page).locator("canvas").screenshot()).toString("base64");
-    // A patch of dry sand, right of the feet and clear of the star.
-    const sand = await page.evaluate(async (data) => {
+    // Patches of dry sand, right of the feet and clear of the star: high up, then just above the water.
+    const [high, shore] = await page.evaluate(async (data) => {
       const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${data}`)).blob());
       const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext("2d")!;
       context.drawImage(bitmap, 0, 0);
-      const { data: pixels } = context.getImageData(127, 63, 19, 18);
-      const mean = (channel: number): number => {
-        const values = pixels.filter((_, index) => index % 4 === channel);
-        return values.reduce((sum, value) => sum + value, 0) / values.length;
+      const measure = (x: number, y: number, width: number, height: number) => {
+        const { data: pixels } = context.getImageData(x, y, width, height);
+        const mean = (channel: number): number => {
+          const values = pixels.filter((_, index) => index % 4 === channel);
+          return values.reduce((sum, value) => sum + value, 0) / values.length;
+        };
+        const greens = pixels.filter((_, index) => index % 4 === 1);
+        const green = mean(1);
+        const deviation = Math.sqrt(greens.reduce((sum, value) => sum + (value - green) ** 2, 0) / greens.length);
+        return { red: mean(0), green, blue: mean(2), deviation };
       };
-      const greens = pixels.filter((_, index) => index % 4 === 1);
-      const green = mean(1);
-      const deviation = Math.sqrt(greens.reduce((sum, value) => sum + (value - green) ** 2, 0) / greens.length);
-      return { red: mean(0), green, blue: mean(2), deviation };
+      return [measure(127, 63, 19, 18), measure(134, 87, 16, 8)];
     }, png);
-    expect(sand.deviation).toBeGreaterThan(2);
-    expect(sand.red).toBeGreaterThan(235);
-    expect(sand.green).toBeGreaterThan(170);
-    expect(sand.blue).toBeLessThan(120);
+    expect(high.deviation).toBeGreaterThan(2);
+    expect(high.red).toBeGreaterThan(235);
+    expect(high.green).toBeGreaterThan(170);
+    expect(high.blue).toBeLessThan(120);
+    expect(shore.green).toBeLessThan(high.green - 8);
   });
 
   test("leaves page scrolling alone on the logo", async ({ page }) => {

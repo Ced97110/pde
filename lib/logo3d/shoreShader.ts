@@ -56,6 +56,18 @@ float sandLayers(vec2 point) {
   float mid = sandNoise(SAND_TURN * SAND_TURN * point * 2.3 + 17.0);
   float fine = sandNoise(SAND_TURN * SAND_TURN * SAND_TURN * point * 5.1 + 41.0);
   return 0.55 * wide + 0.3 * mid + 0.15 * fine;
+}
+// Wind ripples run along the shore, wandering so that no two ridges match.
+float rippleHeight(vec2 point) {
+  float upBeach = shoreRest(point.x) - point.y;
+  float wander = 26.0 * sandNoise(SAND_TURN * point * 0.022) + 7.0 * sandNoise(SAND_TURN * point * 0.07);
+  return sin((upBeach + wander) * 0.44);
+}
+// Lit by its own low sun, from the top left, so the scene lights keep the logo's colours.
+float rippleShade(vec2 point) {
+  const vec2 SUN = vec2(-0.6, -0.8);
+  float rise = rippleHeight(point + SUN * 2.0) - rippleHeight(point - SUN * 2.0);
+  return rise * smoothstep(12.0, 46.0, shoreRest(point.x) - point.y);
 }`;
 
 // The scene has no sky to reflect, so wet sand adds its own, fading as the sand dries.
@@ -70,6 +82,8 @@ const FRAGMENTS: Record<Exclude<ShoreRole, "line" | "ripple">, string> = {
     vec3 drySand = mix(uSandDark, uSandLight, smoothstep(0.3, 0.7, patches));
     drySand = mix(drySand, uGrainDark, 0.28 * smoothstep(0.52, 0.72, grain));
     drySand = mix(drySand, uGrainLight, 0.4 * smoothstep(0.48, 0.3, grain));
+    drySand *= 1.0 + 0.1 * rippleShade(vSvg);
+    drySand = mix(drySand, uWetSand, 0.42 * (1.0 - smoothstep(6.0, 56.0, shoreRest(vSvg.x) - vSvg.y)));
     float reach = shoreRest(vSvg.x) + uReach + uChop * shoreChop(vSvg.x, 0.0) + 8.0 * (patches - 0.5);
     float wetBand = uWet * smoothstep(reach - 2.5, reach + 2.5, vSvg.y);
     diffuseColor.rgb = mix(drySand, uWetSand * (0.85 + 0.3 * patches), 0.9 * wetBand);`,
