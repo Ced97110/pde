@@ -13,6 +13,17 @@ const scrollSection = async (page: Page, viewportRatio: number) => {
   await page.waitForTimeout(700);
 };
 
+// Puts the bottom of the manifesto, the curtain over the photo, at a fraction of the screen height.
+const liftManifesto = async (page: Page, viewportRatio: number) => {
+  const bottom = await page.locator(".manifesto").evaluate((el) => el.getBoundingClientRect().bottom + window.scrollY);
+  const height = page.viewportSize()!.height;
+  await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), bottom - height * viewportRatio);
+  await page.waitForTimeout(400);
+};
+
+const photoAt = (page: Page, x: number, y: number) =>
+  page.evaluate(([px, py]) => Boolean(document.elementFromPoint(px, py)?.closest(".beach")), [x, y]);
+
 const waitForIntro = (page: Page) =>
   expect(page.locator("html")).not.toHaveAttribute("data-hero-intro", /.+/, { timeout: 3_000 });
 
@@ -61,24 +72,32 @@ for (const [width, height] of [[1440, 900], [390, 844]]) {
       await waitForIntro(page);
     });
 
-    test("holds the photo in place while the gîtes rise over it", async ({ page }) => {
-      await scrollSection(page, -0.5);
+    test("reveals the photo, already in place, as the manifesto lifts away", async ({ page }) => {
+      await liftManifesto(page, 0.5);
+      expect(Math.round((await section(page).boundingBox())!.y)).toBe(0);
+      expect(await photoAt(page, width / 2, height * 0.75)).toBe(true);
+      expect(await photoAt(page, width / 2, height * 0.25)).toBe(false);
+      await liftManifesto(page, 0.1);
+      expect(Math.round((await section(page).boundingBox())!.y)).toBe(0);
+      expect(await photoAt(page, width / 2, height * 0.5)).toBe(true);
+    });
+
+    test("shows the whole photo for a moment, then lets the gîtes cover it", async ({ page }) => {
+      await liftManifesto(page, -0.25);
+      expect(Math.round((await section(page).boundingBox())!.y)).toBe(0);
+      expect(Math.round((await units(page).boundingBox())!.y)).toBeGreaterThanOrEqual(height);
+      await liftManifesto(page, -1);
       expect(Math.round((await section(page).boundingBox())!.y)).toBe(0);
       expect(Math.round((await units(page).boundingBox())!.y)).toBe(height / 2);
-      await scrollSection(page, -1);
+      await liftManifesto(page, -1.5);
       expect(Math.round((await units(page).boundingBox())!.y)).toBeLessThanOrEqual(0);
     });
 
-    test("moves the photo slower than the section covering it", async ({ page }) => {
-      await scrollSection(page, 0);
-      expect(await translateY(page)).toBe(0);
-      await scrollSection(page, -0.5);
-      const midway = await translateY(page);
-      await scrollSection(page, -1);
-      const end = await translateY(page);
-      expect(midway).toBeLessThan(0);
-      expect(end).toBeLessThan(midway);
-      expect(Math.abs(end)).toBeLessThan(height * 0.2);
+    test("keeps the photo itself still throughout", async ({ page }) => {
+      for (const ratio of [0.5, -0.25, -1]) {
+        await liftManifesto(page, ratio);
+        expect(await translateY(page)).toBe(0);
+      }
     });
 
     test("never uncovers the bottom of the frame", async ({ page }) => {
@@ -96,18 +115,43 @@ for (const [width, height] of [[1440, 900], [390, 844]]) {
   });
 }
 
-test("gives the covering section an opaque background", async ({ page }) => {
+for (const [width, height] of [[1440, 900], [1920, 1200], [1024, 1366], [390, 844]]) {
+  test(`never shows the photo over the hero, all the way down, at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/fr");
+    const end = await page.locator(".manifesto").evaluate((el) => el.getBoundingClientRect().bottom + window.scrollY);
+    for (let y = 0; y <= end; y += height / 8) {
+      await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), y);
+      const leaks = await page.evaluate(() => {
+        const hero = document.querySelector(".hero")!.getBoundingClientRect();
+        const found: string[] = [];
+        for (let py = Math.max(0, hero.top) + 2; py < Math.min(window.innerHeight, hero.bottom); py += 12) {
+          for (const px of [4, window.innerWidth / 2, window.innerWidth - 4]) {
+            if (document.elementFromPoint(px, py)?.closest(".beach")) found.push(`${Math.round(px)},${Math.round(py)}`);
+          }
+        }
+        return found;
+      });
+      expect(leaks, `photo over the hero at scroll ${Math.round(y)}`).toEqual([]);
+    }
+  });
+}
+
+test("gives both curtains an opaque background", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/fr");
   await expect(units(page)).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator(".manifesto")).toHaveCSS("background-color", "rgb(255, 255, 255)");
 });
 
-test("keeps the photo still under reduced motion, while still being covered", async ({ page }) => {
+test("keeps the reveal and the cover under reduced motion, which only follow the scroll", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/fr");
-  await scrollSection(page, -0.5);
-  expect(await translateY(page)).toBe(0);
+  await liftManifesto(page, 0.5);
+  expect(await photoAt(page, 720, 675)).toBe(true);
+  await liftManifesto(page, -1);
   expect(Math.round((await units(page).boundingBox())!.y)).toBe(450);
 });
 

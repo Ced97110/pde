@@ -7,6 +7,8 @@
 @import "tailwindcss";
 
 :root {
+  /* The manifesto is the curtain over the beach photo: both read this height. */
+  --manifesto-height: 80svh;
   --ground: #ffffff;
   --highlight: #8ad6d1;
   --surface: #ffffff;
@@ -311,6 +313,7 @@ html[data-hero-intro="pending"] body > header {
 /* The block padding reserves the height of the tallest picture, so the text is never covered. */
 .manifesto {
   --picture-width: clamp(96px, 16vw, 260px);
+  min-height: var(--manifesto-height);
   padding-block: calc(var(--picture-width) * 0.97 + 2.5rem);
 }
 
@@ -431,8 +434,13 @@ body[data-header="solid"] > header {
 
 /* The stage ends one screen below the photo, so the photo only sticks while the next section covers it.
    Without this limit it would stay behind every later section. */
+/* The photo's stage starts at the top of the manifesto, never higher, so it cannot show over the hero.
+   The manifesto is at least as tall as that overlap, and may grow taller: the photo then simply starts lower.
+   Height: the reveal, half a screen in full view, one screen covered by the gîtes,
+   plus the screen the sticky photo itself occupies. */
 .beach-stage {
-  height: 200svh;
+  height: calc(var(--manifesto-height) + 250svh);
+  margin-top: calc(-1 * var(--manifesto-height));
 }
 
 .beach-cover {
@@ -442,7 +450,7 @@ body[data-header="solid"] > header {
 
 .beach-media {
   position: absolute;
-  inset: 0 0 -15% 0;
+  inset: 0;
 }
 
 /* Plain veil: gradients are banned. Value set by e2e/units.spec.ts, which measures 4.5:1 on the real photos. */

@@ -51,7 +51,7 @@ export function Manifesto({ text }: ManifestoProps) {
   return (
     <section
       ref={rootRef}
-      className="manifesto relative flex min-h-[80svh] items-center justify-center overflow-hidden px-[var(--page-margin)]"
+      className="manifesto relative z-[1] flex bg-background items-center justify-center overflow-hidden px-[var(--page-margin)]"
     >
       <div className="manifesto-shell manifesto-picture" aria-hidden="true">
         <Image src="/images/decor/coquillage.webp" alt="" width={808} height={586} sizes="(min-width: 768px) 20vw, 30vw" />
