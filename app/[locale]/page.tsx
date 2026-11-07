@@ -24,7 +24,7 @@ const UNIT_CARD_PHOTOS: Record<UnitSlug, { focus: string; hoverIndex: number; ho
   carambole: { focus: "72% 50%", hoverIndex: 1, hoverFocus: "60% 50%" },
 };
 const HERO_PHOTO = "/images/gallery/2026-10-14-52.jpg";
-const BEACH_PHOTO = "/images/plage-sainte-anne.webp";
+const BALCONY_PHOTO = "/images/chambre-balcon.webp";
 const HOST_PHOTO = "/images/gallery/2026-10-31-24.jpg";
 const PRESENTATION_PHOTOS = [
   "/images/gallery/2026-10-31-14.jpg",
@@ -72,7 +72,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
 
       <Manifesto text={dict.home.manifesto} />
 
-      <BeachParallax src={BEACH_PHOTO} alt={dict.home.beachPhotoAlt} />
+      <BeachParallax src={BALCONY_PHOTO} alt={dict.home.beachPhotoAlt} />
 
       <section id="gites" className="beach-cover relative bg-background pt-20 sm:pt-28">
         <ScrollWords text={dict.home.unitsTitle} className="section-title px-[var(--page-margin)] text-center text-persienne" />

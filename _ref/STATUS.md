@@ -149,3 +149,4 @@ Date: 2026-11-06. awwwards-mcp 1.18.0, launched through npx.
 ## Hero after Hotel du Tasso (2026-11-06)
 - On request, composition taken from hoteldutassosorrento.com (Awwwards nominee, slug hotel-du-tasso), own assets only: pale frame, white panel, small photo top left, tall video right, title bottom left, panel opening at the intro. Phone: full-screen video, centred title. No logo, copy, photo or font taken from it. No scroll-down button: the hero stays title-only.
 - Header logo doubled to 128px on the hero only, back to 64px in the solid header and on the other pages.
+- Section 3 photo replaced by chambre-balcon.webp (original 2026-10-14 53, Michel R. Photography) because the old beach photo had no licence. The old file remains in the git history.

@@ -42,8 +42,8 @@ test.describe("layout at 1440px", () => {
     expect(await section(page).boundingBox()).toMatchObject({ x: 0, width: 1440, height: 900 });
     const images = section(page).locator("img");
     await expect(images).toHaveCount(1);
-    await expect(images).toHaveAttribute("src", /plage-sainte-anne/);
-    await expect(images).toHaveAttribute("alt", "Plage de Sainte-Anne, Guadeloupe");
+    await expect(images).toHaveAttribute("src", /chambre-balcon/);
+    await expect(images).toHaveAttribute("alt", "Chambre ouverte sur le balcon, les palmiers et la mer");
   });
 
   test("shows the photo without any caption", async ({ page }) => {
@@ -111,10 +111,15 @@ test("keeps the photo still under reduced motion, while still being covered", as
   expect(Math.round((await units(page).boundingBox())!.y)).toBe(450);
 });
 
+test("no longer ships the old beach photo", async ({ request }) => {
+  const response = await request.get("/images/plage-sainte-anne.webp");
+  expect(response.status()).toBe(404);
+});
+
 test("is translated", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/en");
-  await expect(section(page).locator("img")).toHaveAttribute("alt", "Sainte-Anne beach, Guadeloupe");
+  await expect(section(page).locator("img")).toHaveAttribute("alt", "Bedroom opening onto the balcony, the palm trees and the sea");
 });
 
 test("stays complete without JavaScript", async ({ browser }) => {

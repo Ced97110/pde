@@ -20,7 +20,7 @@ export const en: Dictionary = {
   },
   home: {
     manifesto: "Three gîtes right on the beach in Sainte-Anne, steps from the market. No car needed.",
-    beachPhotoAlt: "Sainte-Anne beach, Guadeloupe",
+    beachPhotoAlt: "Bedroom opening onto the balcony, the palm trees and the sea",
     hostTitle: "Staying with Madame Panol",
     hostPhotoAlt: "Red tropical flower",
     hostText:

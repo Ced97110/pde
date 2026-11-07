@@ -39,7 +39,7 @@ export function BeachParallax({ src, alt }: BeachParallaxProps) {
     <div ref={stageRef} className="beach-stage">
       <section className="beach sticky top-0 h-svh overflow-hidden">
         <div className="beach-media">
-          <Image src={src} alt={alt} fill sizes="(min-width: 768px) 125vw, 300vw" className="object-cover object-[8%_50%] md:object-[30%_50%]" />
+          <Image src={src} alt={alt} fill sizes="(min-width: 768px) 125vw, 300vw" className="object-cover object-[36%_50%]" />
         </div>
       </section>
     </div>

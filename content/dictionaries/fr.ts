@@ -19,7 +19,7 @@ export const fr = {
   home: {
     manifesto:
       "Trois gîtes posés sur la plage de Sainte-Anne, à deux pas du marché. Pas besoin de voiture.",
-    beachPhotoAlt: "Plage de Sainte-Anne, Guadeloupe",
+    beachPhotoAlt: "Chambre ouverte sur le balcon, les palmiers et la mer",
     hostTitle: "Chez Madame Panol",
     hostPhotoAlt: "Fleur rouge tropicale",
     hostText:
