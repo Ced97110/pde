@@ -1,0 +1,116 @@
+import type { Dictionary } from "./types";
+
+export const en: Dictionary = {
+  nav: {
+    home: "Home",
+    units: "Our gîtes",
+    gallery: "Photos",
+    pricing: "Pricing",
+    location: "Location",
+    reviews: "Reviews",
+    contact: "Contact",
+    book: "Book",
+    beach: "The beach",
+    language: "Language",
+    menu: "Menu",
+  },
+  hero: {
+    subtitle:
+      "Seaside holiday rentals right on the town beach of Sainte-Anne, Guadeloupe",
+  },
+  home: {
+    manifesto: "Three gîtes right on the beach in Sainte-Anne, steps from the market. No car needed.",
+    beachPhotoAlt: "Sainte-Anne beach, Guadeloupe",
+    hostTitle: "Staying with Madame Panol",
+    hostPhotoAlt: "Red tropical flower",
+    hostText:
+      "You are welcomed here by the family, not a front desk. Got a question before you book? Madame Panol answers it herself.",
+    reviewsCta: "Read all the reviews",
+    introText:
+      "Three fully-equipped apartments right on the beach in Sainte-Anne, steps from shops, restaurants, the market and the town centre. No car needed.",
+    unitsTitle: "Three gîtes, one beach",
+    creoleFlourish: "Tout moun byenvini — everyone is welcome.",
+    reviewsTitle: "What our guests say",
+  },
+  units: {
+    capacity: "guests",
+    surface: "m²",
+    from: "From",
+    yes: "Yes",
+    surfaceLabel: "Size",
+    guestsLabel: "Sleeps",
+    terraceLabel: "Terrace",
+    locationLabel: "Position",
+    featuresTitle: "The details",
+    otherUnits: "Our other gîtes",
+    seaView: "Sea view",
+    noSeaView: "Garden view",
+    wheelchair: "Wheelchair accessible",
+    amenitiesTitle: "Amenities",
+    sleepingTitle: "Sleeping arrangements",
+    outdoorTitle: "Outdoor space",
+    registration: "Registration no.",
+    backToUnits: "Back to all gîtes",
+    viewPricing: "See pricing",
+  },
+  pricing: {
+    title: "Pricing & conditions",
+    subtitle: "Weekly rentals only",
+    unit: "Accommodation",
+    capacity: "Capacity",
+    perWeek: "per week",
+    perWeekShort: "/ week",
+    discountsTitle: "Long-stay discounts",
+    discount: (weeks: number, percent: number) =>
+      `${weeks} weeks or more: -${percent}%`,
+    minStay: "Minimum stay: 3 nights (€15 surcharge below that)",
+    deposit: "50% deposit on booking, balance on arrival",
+    cleaningFee: "End-of-stay cleaning fee",
+    touristTax: "Tourist tax (per adult, per night)",
+    includedTitle: "Included in your stay",
+  },
+  location: {
+    title: "Location",
+    text1:
+      "The residence sits right on the town beach of Sainte-Anne — white sand, a few steps from your terrace.",
+    text2:
+      "Traditional restaurants line the beach, with shops, the market, a craft village and sports activities all within walking distance.",
+    text3:
+      "Sainte-Anne is a seaside town at the heart of Grande-Terre, known for its fine sand beaches and turquoise waters — an ideal base to explore the whole island.",
+  },
+  reviews: {
+    title: "Guest reviews",
+    translated: "translated from French",
+  },
+  contact: {
+    title: "Get in touch",
+    messageStart: "A question about a gîte or your dates? Call Madame Panol on",
+    messageMiddle: "or",
+    messageEmail: "write to us",
+    subtitle: "You can also fill in this form, we reply as soon as possible.",
+    giteLabel: "Which gîte?",
+    giteAny: "Not decided yet",
+    openMap: "Open in Maps",
+    nameLabel: "Full name",
+    emailLabel: "Email",
+    phoneLabel: "Phone (optional)",
+    datesLabel: "Preferred dates (optional)",
+    guestsLabel: "Number of guests",
+    messageLabel: "Message",
+    submit: "Send request",
+    submitting: "Sending…",
+    success: "Thank you! Your message has been sent, we'll get back to you shortly.",
+    error: "Something went wrong. Please try again or call us directly.",
+    directTitle: "Direct contact details",
+  },
+  footer: {
+    rights: "All rights reserved.",
+    legalNotice: "Legal notice",
+  },
+  gallery: {
+    close: "Close",
+  },
+  legal: {
+    title: "Legal notice",
+  },
+};
