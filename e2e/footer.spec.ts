@@ -157,6 +157,9 @@ test.describe("3D logo", () => {
     await footer(page).scrollIntoViewIfNeeded();
     await expect(logo3d(page)).toHaveAttribute("data-ready", "true", { timeout: 15_000 });
     await expect(logo3d(page)).not.toHaveAttribute("data-animated", /.+/);
+    const still = await logo3d(page).locator("canvas").screenshot();
+    await page.waitForTimeout(1_000);
+    expect(still.equals(await logo3d(page).locator("canvas").screenshot())).toBe(true);
   });
 
   test("leaves page scrolling alone on the logo", async ({ page }) => {

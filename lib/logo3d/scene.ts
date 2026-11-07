@@ -75,6 +75,7 @@ export function createLogoScene(canvas: HTMLCanvasElement, animate: boolean): Lo
       const seconds = (performance.now() - startedAt) / 1000;
       model.root.rotation.y = SWAY_ANGLE * Math.sin(seconds * SWAY_SPEED);
       model.root.position.y = BOB_HEIGHT * Math.sin(seconds * BOB_SPEED);
+      model.animateShore(seconds);
     }
     renderer.render(scene, camera);
   };
