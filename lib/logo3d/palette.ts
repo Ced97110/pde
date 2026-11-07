@@ -9,6 +9,8 @@ export const LOGO_COLORS = {
   wetSky: "#BFE9F2",
   wetSand: "#CF8A1A", // orange
   star: "#E2262E", // red
+  starLight: "#FF8A6B",
+  starDeep: "#B3161F",
   water: "#00A99D", // teal
   shallow: "#3FD1C4",
   ripple: "#8DEBDF",

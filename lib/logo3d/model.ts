@@ -18,15 +18,14 @@ import { SVGLoader } from "three/addons/loaders/SVGLoader.js";
 import { LOGO_COLORS } from "./palette";
 import { LOGO_FEET_SVG, LOGO_TEXT_SVG } from "./paths";
 import { createShore } from "./shoreShader";
+import { buildStarfishGeometry } from "./starfish";
 
 // The model uses the logo's own SVG coordinates: 560 units wide, centred on (280, 280), y pointing down.
 const CENTRE = 280;
 // Frames the disc with the name above it, as the flat logo's viewBox does.
 const FRAME_CENTRE_Y = 262;
 const MODEL_SCALE = 0.0123;
-const STAR_POINTS: Array<[number, number]> = [
-  [0, -20], [5, -6], [19, -6], [8, 3], [12, 17], [0, 8], [-12, 17], [-8, 3], [-19, -6], [-5, -6],
-];
+const STARFISH_CENTRE = { x: 198, y: 211 };
 
 const standard = (color: string, roughness: number, metalness = 0): MeshStandardMaterial =>
   new MeshStandardMaterial({ color: new Color(color), roughness, metalness });
@@ -52,18 +51,6 @@ function shoreline(): Vector2[] {
   wave.bezierCurveTo(262, 257, 290, 282, 325, 270);
   wave.bezierCurveTo(360, 258, 390, 280, 430, 264);
   return wave.getPoints(120);
-}
-
-function starShape(): Shape {
-  const angle = (-12 * Math.PI) / 180;
-  const star = new Shape();
-  STAR_POINTS.forEach(([x, y], index) => {
-    const px = 204 + x * Math.cos(angle) - y * Math.sin(angle);
-    const py = 212 + x * Math.sin(angle) + y * Math.cos(angle);
-    if (index === 0) star.moveTo(px, py);
-    else star.lineTo(px, py);
-  });
-  return star;
 }
 
 function ripple(...coordinates: number[]): Vector2[] {
@@ -134,7 +121,7 @@ export function buildLogoModel(): LogoModel {
   tube(ripple(158, 318, 172, 310, 186, 318, 200, 310), 1.75, 42.1, shore.bind(standard(LOGO_COLORS.ripple, 0.4), "ripple"));
   tube(ripple(360, 330, 374, 322, 388, 330, 402, 322), 1.75, 42.1, shore.bind(standard(LOGO_COLORS.ripple, 0.4), "ripple"));
   tube(ripple(236, 392, 256, 384, 276, 392, 296, 384, 310, 378, 322, 384, 330, 380), 1.75, 42.1, shore.bind(standard(LOGO_COLORS.ripple, 0.4), "ripple"));
-  layer(starShape(), 49, 9, 2.6, standard(LOGO_COLORS.star, 0.5));
+  add(buildStarfishGeometry(), new MeshStandardMaterial({ vertexColors: true, roughness: 0.55 })).position.set(STARFISH_CENTRE.x, STARFISH_CENTRE.y, -40);
 
   const destroy = (): void => {
     shore.destroy();
