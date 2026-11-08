@@ -231,28 +231,35 @@ h3,
   text-wrap: balance;
 }
 
-/* Twice the size on the hero only: the 80px solid header cannot hold it.
-   The link keeps its 64px, so the logo overflows it evenly and the header columns stay centred. */
-body:has(.hero):not([data-header="solid"]) > header a:has(.header-logo) {
-  align-self: start;
-  width: 64px;
-  padding-top: 0.5rem;
+/* Twice the size on the hero only, by scale so the size eases both ways.
+   Scaled from its top edge, the logo grows down past the 80px header without moving the columns. */
+.header-logo {
+  transform-origin: 50% 0;
+  transition: transform 600ms ease;
 }
 
 body:has(.hero):not([data-header="solid"]) .header-logo {
-  width: 128px;
-  height: 128px;
-  max-width: none;
-  margin-inline: -32px;
+  transform: scale(2);
   /* No single name colour reads on both photos, the white header and the dark footer. */
   content: url("/brand/logo-pieds-light.svg");
 }
 
-/* The doubled logo needs this room between the menu items on small laptops. */
-@media (min-width: 1024px) and (max-width: 1199px) {
-  body:has(.hero):not([data-header="solid"]) > header nav,
-  body:has(.hero):not([data-header="solid"]) > header .justify-end {
-    gap: 0.75rem;
+/* On the hero only the logo shows: the menus fade in with the white header. */
+.header-side {
+  transition:
+    opacity 300ms ease,
+    visibility 300ms;
+}
+
+body:has(.hero):not([data-header="solid"]) .header-side {
+  visibility: hidden;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-logo,
+  .header-side {
+    transition: none;
   }
 }
 

@@ -37,7 +37,7 @@ export function Header({ locale, dict }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 h-20 border-b border-line bg-background">
       <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center gap-4 px-[var(--page-margin)]">
-        <div>
+        <div className="header-side">
           <LocaleSwitcher locale={locale} label={dict.nav.language} />
         </div>
 
@@ -45,7 +45,7 @@ export function Header({ locale, dict }: HeaderProps) {
           <Image src="/brand/logo-pieds.svg" alt="" width={64} height={64} className="header-logo" priority />
         </Link>
 
-        <div className="flex items-center justify-end gap-6">
+        <div className="header-side flex items-center justify-end gap-6">
           <HoverNav className="label hidden items-center gap-6 lg:flex">
             <a {...beachLinkProps} className="py-2">
               <RollingLabel text={dict.nav.beach} />

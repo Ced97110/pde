@@ -1,6 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 import { worstWhiteContrast } from "./contrast";
 
+const pastHero = async (page: Page) => {
+  await page.evaluate(() => window.scrollTo(0, window.innerHeight + 200));
+  await expect(page.locator("body")).toHaveAttribute("data-header", "solid");
+};
+
 const TITLE = "Gîtes touristiques en bord de mer, sur la plage du bourg de Sainte-Anne, Guadeloupe";
 
 test("plays the title intro once per session and ends within 3 seconds", async ({ page }) => {
@@ -45,6 +50,7 @@ test("rolls a navigation label on keyboard focus", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/fr");
   await expect(page.locator("html")).not.toHaveAttribute("data-hero-intro", /.+/, { timeout: 3_000 });
+  await pastHero(page);
   const link = page.locator("body > header nav summary");
   await expect(link).toBeVisible();
   await link.focus();
@@ -164,9 +170,6 @@ test("shows only the title on the hero", async ({ page }) => {
   await expect(page.locator(".hero p")).toHaveCount(0);
 });
 
-const overlaps = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
-  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-
 const secondSlide = (page: Page) => page.locator(".hero-slide").nth(1);
 
 // Holds the cross-fade at one point of its loop, between 0 and 1.
@@ -276,16 +279,14 @@ test("gets the normal header back past the hero", async ({ page }) => {
 });
 
 for (const width of [1440, 1024, 390, 320]) {
-  test(`doubles the logo on the hero at ${width}px, clear of the menus`, async ({ page }) => {
+  test(`doubles the logo on the hero at ${width}px, alone in the header`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/fr");
     const logo = (await page.locator("body > header .header-logo").boundingBox())!;
     expect(logo).toMatchObject({ width: 128, height: 128 });
     expect(Math.abs(logo.x + logo.width / 2 - width / 2)).toBeLessThanOrEqual(1);
-    const others = await page.getByRole("banner").locator("summary:visible, nav a:visible, a.btn:visible").all();
-    expect(others.length).toBeGreaterThan(1);
-    for (const other of others) expect(overlaps(logo, (await other.boundingBox())!)).toBe(false);
+    await expect(page.getByRole("banner").locator("summary:visible, nav a:visible, a.btn:visible")).toHaveCount(0);
   });
 }
 
@@ -297,5 +298,64 @@ test("keeps the normal logo once past the hero and on the other pages", async ({
   await expect(page.locator("body")).toHaveAttribute("data-header", "solid");
   expect((await page.locator("body > header .header-logo").boundingBox())!.height).toBe(64);
   await page.goto("/fr/tarifs");
+  expect((await page.locator("body > header .header-logo").boundingBox())!.height).toBe(64);
+});
+
+for (const width of [1440, 390]) {
+  test(`hides the navigation on the hero at ${width}px, keeping only the logo`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/fr");
+    const banner = page.getByRole("banner");
+    await expect(banner.locator(".header-logo")).toBeVisible();
+    await expect(banner.locator("summary:visible, nav a:visible")).toHaveCount(0);
+    await expect(banner).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+
+    await pastHero(page);
+    await expect(banner.locator("summary[aria-label^='Langue']")).toBeVisible();
+    await expect(banner.locator(width < 1024 ? "summary.menu-toggle" : "nav")).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(page.locator("body")).toHaveAttribute("data-header", "hero");
+    await expect(banner.locator("summary:visible, nav a:visible")).toHaveCount(0);
+  });
+}
+
+test("keeps the hidden navigation out of the keyboard order on the hero", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  const reached: string[] = [];
+  for (let press = 0; press < 4; press += 1) {
+    await page.keyboard.press("Tab");
+    reached.push(await page.evaluate(() => {
+      const element = document.activeElement;
+      if (!element?.closest("body > header")) return "outside";
+      return element.matches("a[href='/fr']") ? "logo" : element.outerHTML.slice(0, 60);
+    }));
+  }
+  expect(reached.filter((entry) => entry !== "outside" && entry !== "logo")).toEqual([]);
+  expect(reached).toContain("logo");
+});
+
+test("eases the logo from one size to the other", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  await expect(page.locator("html")).not.toHaveAttribute("data-hero-intro", /.+/, { timeout: 3_000 });
+  const logo = page.locator("body > header .header-logo");
+  await expect.poll(async () => (await logo.boundingBox())!.height).toBe(128);
+  await pastHero(page);
+  const transitions = await logo.evaluate((element) =>
+    element.getAnimations().map((animation) => (animation as CSSTransition).transitionProperty),
+  );
+  expect(transitions).toContain("transform");
+  await expect.poll(async () => (await logo.boundingBox())!.height).toBe(64);
+});
+
+test("swaps the logo size at once under reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/fr");
+  await pastHero(page);
   expect((await page.locator("body > header .header-logo").boundingBox())!.height).toBe(64);
 });

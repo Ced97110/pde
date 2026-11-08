@@ -8,6 +8,12 @@ const languageMenu = (page: Page) => banner(page).locator("summary[aria-label^='
 const unitsMenu = (page: Page) => nav(page).locator("summary");
 const menuButton = (page: Page) => banner(page).locator("summary.menu-toggle");
 
+// The home page shows only the logo over the hero: the menus appear once past it.
+const pastHero = async (page: Page) => {
+  await page.evaluate(() => window.scrollTo(0, window.innerHeight + 200));
+  await expect(page.locator("body")).toHaveAttribute("data-header", "solid");
+};
+
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
@@ -36,12 +42,14 @@ test.describe("desktop", () => {
 
   test("offers exactly La plage, Nos gîtes and Contact", async ({ page }) => {
     await page.goto("/fr");
+    await pastHero(page);
     await expect(nav(page).locator(".roll .sr-only")).toHaveText(["La plage", "Nos gîtes", "Contact"]);
     await expect(nav(page).getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/fr/contact");
   });
 
   test("opens the beach guide in a new tab", async ({ page }) => {
     await page.goto("/fr");
+    await pastHero(page);
     const beach = nav(page).getByRole("link", { name: "La plage" });
     await expect(beach).toHaveAttribute("href", BEACH_URL);
     await expect(beach).toHaveAttribute("target", "_blank");
@@ -50,6 +58,7 @@ test.describe("desktop", () => {
 
   test("lists the three gîtes in a dropdown leading to their pages", async ({ page }) => {
     await page.goto("/fr");
+    await pastHero(page);
     const links = nav(page).locator("details a");
     await expect(links.first()).toBeHidden();
     await unitsMenu(page).click();
@@ -197,6 +206,7 @@ test.describe("phone", () => {
   for (const route of ["/fr", "/fr/tarifs"]) {
     test(`draws the menu button as two thin lines, without a frame, on ${route}`, async ({ page }) => {
       await page.goto(route);
+      if (route === "/fr") await pastHero(page);
       const button = menuButton(page);
       await expect(button).toHaveAccessibleName("Menu");
       await expect(button).toHaveCSS("border-top-width", "0px");
@@ -218,6 +228,7 @@ test.describe("phone", () => {
 
   test("turns the two lines into a cross when the menu opens", async ({ page }) => {
     await page.goto("/fr");
+    await pastHero(page);
     await menuButton(page).click();
     await expect(menuButton(page)).toHaveAccessibleName("Fermer");
     const lines = menuButton(page).locator(".menu-bars > span");
@@ -230,6 +241,7 @@ test.describe("phone", () => {
 
   test("offers the same entries in the menu", async ({ page }) => {
     await page.goto("/fr");
+    await pastHero(page);
     await menuButton(page).click();
     for (const name of ["La plage", "Sapotille", "Maracudja", "Carambole", "Contact"]) {
       await expect(banner(page).getByRole("link", { name, exact: true }).locator("visible=true")).toHaveCount(1);
@@ -240,6 +252,7 @@ test.describe("phone", () => {
   for (const route of ["/fr", "/fr/tarifs"]) {
     test(`covers the whole screen with the menu on ${route}`, async ({ page }) => {
       await page.goto(route);
+      if (route === "/fr") await pastHero(page);
       await menuButton(page).click();
       const sheet = banner(page).locator(".menu-sheet");
       await expect(sheet).toBeVisible();
@@ -256,6 +269,7 @@ test.describe("phone", () => {
 
   test("shows the gîtes as a gallery of photos in the menu", async ({ page }) => {
     await page.goto("/fr");
+    await pastHero(page);
     await menuButton(page).click();
     const cards = banner(page).locator(".menu-sheet .menu-card");
     await expect(cards.locator(".menu-card-name")).toHaveText(["Sapotille", "Maracudja", "Carambole"]);
@@ -278,6 +292,7 @@ test.describe("phone", () => {
 
   test("keeps the menu over the whole screen in English", async ({ page }) => {
     await page.goto("/en");
+    await pastHero(page);
     await expect(menuButton(page)).toHaveAccessibleName("Menu");
     await menuButton(page).click();
     await expect(menuButton(page)).toHaveAccessibleName("Close");
