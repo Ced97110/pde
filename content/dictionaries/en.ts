@@ -13,6 +13,7 @@ export const en: Dictionary = {
     beach: "The beach",
     language: "Language",
     menu: "Menu",
+    close: "Close",
   },
   hero: {
     subtitle:

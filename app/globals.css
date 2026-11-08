@@ -9,6 +9,7 @@
 :root {
   /* The manifesto is the curtain over the beach photo: both read this height. */
   --manifesto-height: 80svh;
+  --ease-menu: cubic-bezier(0.65, 0, 0.35, 1);
   --ground: #ffffff;
   --highlight: #8ad6d1;
   --surface: #ffffff;
@@ -363,6 +364,233 @@ summary::-webkit-details-marker {
 
 .dropdown[open] .dropdown-chevron {
   rotate: 180deg;
+}
+
+/* Menus ease in. The fade out needs ::details-content (Chromium); other browsers close at once. */
+.dropdown-panel {
+  transition:
+    opacity 300ms ease-out,
+    translate 300ms ease-out;
+}
+
+.dropdown:not([open]) .dropdown-panel {
+  opacity: 0;
+  translate: 0 -6px;
+}
+
+@starting-style {
+  .dropdown[open] .dropdown-panel {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+
+.dropdown::details-content {
+  transition: content-visibility 300ms allow-discrete;
+}
+
+/* A thin line glides from tab to tab under the pointer (components/HoverNav.tsx). */
+.nav-line {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  width: var(--line-width, 0);
+  height: 1px;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  translate: var(--line-x, 0) 0;
+  transition:
+    translate 450ms var(--ease-menu),
+    width 450ms var(--ease-menu),
+    opacity 200ms ease-out;
+}
+
+.nav-line[data-visible="true"] {
+  opacity: 1;
+}
+
+/* The gîtes photos unveil one after the other, from the bottom. */
+.menu-card-photo {
+  clip-path: inset(0);
+  transition: clip-path 600ms var(--ease-menu) calc(var(--card-index, 0) * 70ms);
+}
+
+@starting-style {
+  .dropdown[open] .menu-card-photo {
+    clip-path: inset(100% 0 0 0);
+  }
+}
+
+/* Hovering a gîte dims the others and draws its photo slightly closer. */
+@media (hover: hover) {
+  .menu-card {
+    transition: opacity 300ms ease-out;
+  }
+
+  .dropdown-panel:has(.menu-card:hover) .menu-card:not(:hover) {
+    opacity: 0.45;
+  }
+
+  .menu-card-photo img {
+    transition: scale 700ms var(--ease-menu);
+  }
+
+  .menu-card:hover .menu-card-photo img {
+    scale: 1.05;
+  }
+}
+
+/* Phone menu: a white sheet over the whole screen, the Menu button turned into Fermer above it. */
+.menu-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 7rem var(--page-margin) 2rem;
+  background: var(--ground);
+  color: var(--ink);
+  transition:
+    opacity 300ms ease-out,
+    translate 300ms ease-out,
+    display 300ms allow-discrete;
+}
+
+/* Closed, the details content is contained: the sheet would be laid out at the width of the button. */
+.dropdown-sheet:not([open]) .menu-sheet {
+  display: none;
+}
+
+.dropdown-sheet > summary {
+  position: relative;
+  z-index: 2;
+}
+
+.dropdown-sheet[open] > summary {
+  color: var(--ink);
+}
+
+.menu-when-open,
+.dropdown-sheet[open] .menu-when-closed,
+.dropdown-sheet .dropdown-chevron {
+  display: none;
+}
+
+.dropdown-sheet[open] .menu-when-open {
+  display: inline;
+}
+
+/* Two thin lines, without a frame, that turn into a cross. 44px to tap, the lines flush with the page margin. */
+.menu-toggle {
+  justify-content: flex-end;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+
+.menu-bars {
+  position: relative;
+  display: block;
+  width: 24px;
+  height: 8px;
+}
+
+.menu-bars > span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transition:
+    translate 400ms var(--ease-menu),
+    rotate 400ms var(--ease-menu);
+}
+
+.menu-bars > span:first-child {
+  top: 0;
+}
+
+.menu-bars > span:last-child {
+  bottom: 0;
+}
+
+.dropdown-sheet[open] .menu-bars > span:first-child {
+  translate: 0 3.5px;
+  rotate: 45deg;
+}
+
+.dropdown-sheet[open] .menu-bars > span:last-child {
+  translate: 0 -3.5px;
+  rotate: -45deg;
+}
+
+@media (max-width: 1023.98px) {
+  html:has(.dropdown-sheet[open]) {
+    overflow: hidden;
+  }
+}
+
+.menu-sheet-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.menu-sheet-inner > * {
+  transition:
+    opacity 500ms ease-out,
+    translate 500ms var(--ease-menu);
+}
+
+.menu-sheet-inner > :nth-child(2) {
+  transition-delay: 70ms;
+}
+
+.menu-sheet-inner > :nth-child(3) {
+  transition-delay: 140ms;
+}
+
+@starting-style {
+  .dropdown[open] .menu-sheet-inner > * {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+
+.menu-sheet-link {
+  display: block;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.menu-sheet-units {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.menu-sheet-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.menu-sheet .menu-card {
+  width: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown-panel,
+  .dropdown::details-content,
+  .nav-line,
+  .menu-card,
+  .menu-card-photo,
+  .menu-card-photo img,
+  .menu-sheet-inner > *,
+  .menu-bars > span {
+    transition: none;
+  }
 }
 
 .menu-link {

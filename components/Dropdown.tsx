@@ -18,6 +18,8 @@ interface DropdownProps {
   panelClassName?: string;
   // Opens on hover with a mouse. Touch screens and keyboards keep the click.
   openOnHover?: boolean;
+  // "sheet" covers the whole screen, for the phone menu.
+  variant?: "popover" | "sheet";
   children: ReactNode;
 }
 
@@ -30,6 +32,7 @@ export function Dropdown({
   summaryClassName = "",
   panelClassName = "w-48 flex-col gap-1",
   openOnHover = false,
+  variant = "popover",
   children,
 }: DropdownProps) {
   const pathname = usePathname();
@@ -40,6 +43,11 @@ export function Dropdown({
   const close = () => {
     openedByHover.current = false;
     if (detailsRef.current) detailsRef.current.open = false;
+  };
+
+  // Only a link closes it: a tap on the empty space of the full-screen sheet keeps it open.
+  const closeOnLink = (event: MouseEvent) => {
+    if ((event.target as Element).closest("a")) close();
   };
 
   const onPointerEnter = () => {
@@ -95,7 +103,7 @@ export function Dropdown({
       ref={detailsRef}
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
-      className={`dropdown relative ${className}`}
+      className={`dropdown relative ${variant === "sheet" ? "dropdown-sheet" : ""} ${className}`}
     >
       <summary onClick={onSummaryClick} aria-label={ariaLabel} className={`flex cursor-pointer list-none items-center gap-1.5 py-2 ${summaryClassName}`}>
         {label}
@@ -104,10 +112,14 @@ export function Dropdown({
         </svg>
       </summary>
       <div
-        onClick={close}
-        className={`absolute top-full z-10 mt-2 flex rounded border border-line bg-surface p-2 text-foreground shadow-lg ${panelClassName} ${
-          align === "left" ? "left-0" : "right-0"
-        }`}
+        onClick={closeOnLink}
+        className={
+          variant === "sheet"
+            ? `dropdown-panel menu-sheet ${panelClassName}`
+            : `dropdown-panel absolute top-full z-10 mt-2 flex rounded border border-line bg-surface p-2 text-foreground shadow-lg ${panelClassName} ${
+                align === "left" ? "left-0" : "right-0"
+              }`
+        }
       >
         {children}
       </div>

@@ -11,6 +11,7 @@ export const fr = {
     beach: "La plage",
     language: "Langue",
     menu: "Menu",
+    close: "Fermer",
   },
   hero: {
     subtitle:

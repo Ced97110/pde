@@ -6,6 +6,7 @@ const banner = (page: Page) => page.getByRole("banner");
 const nav = (page: Page) => page.locator("body > header nav");
 const languageMenu = (page: Page) => banner(page).locator("summary[aria-label^='Langue']");
 const unitsMenu = (page: Page) => nav(page).locator("summary");
+const menuButton = (page: Page) => banner(page).locator("summary.menu-toggle");
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -95,6 +96,40 @@ test.describe("desktop", () => {
     await expect(cards.first()).toBeHidden();
   });
 
+  test("glides a line from tab to tab under the pointer", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/fr/tarifs");
+    const line = nav(page).locator(".nav-line");
+    await expect(line).toHaveCSS("opacity", "0");
+    const duration = await line.evaluate((element) => parseFloat(getComputedStyle(element).transitionDuration));
+    expect(duration).toBeGreaterThan(0.2);
+    expect(await line.evaluate((element) => getComputedStyle(element).transitionTimingFunction)).toMatch(/cubic-bezier|ease/);
+
+    for (const name of ["La plage", "Nos gîtes", "Contact"]) {
+      const label = nav(page).locator(".roll", { hasText: name });
+      await label.hover();
+      const target = (await label.boundingBox())!;
+      await expect.poll(async () => Math.round((await line.boundingBox())!.x)).toBe(Math.round(target.x));
+      await expect.poll(async () => Math.round((await line.boundingBox())!.width)).toBe(Math.round(target.width));
+      await expect(line).toHaveCSS("opacity", "1");
+    }
+    await page.mouse.move(200, 600);
+    await expect(line).toHaveCSS("opacity", "0");
+  });
+
+  test("eases the gîtes gallery in, and dims the photos not hovered", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto("/fr/tarifs");
+    const panel = nav(page).locator(".dropdown-panel");
+    const cards = panel.locator(".menu-card");
+    expect(await panel.evaluate((element) => parseFloat(getComputedStyle(element).transitionDuration))).toBeGreaterThan(0.2);
+    await unitsMenu(page).hover();
+    await cards.nth(1).hover();
+    await expect(cards.nth(1)).toHaveCSS("opacity", "1");
+    await expect.poll(() => cards.nth(0).evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(0.7);
+    await expect.poll(() => cards.nth(2).evaluate((element) => Number(getComputedStyle(element).opacity))).toBeLessThan(0.7);
+  });
+
   test("still opens the language menu on click only", async ({ page }) => {
     await page.goto("/fr/tarifs");
     await languageMenu(page).hover();
@@ -154,18 +189,98 @@ test.describe("phone", () => {
   test("keeps the language on the left and the menu on the right", async ({ page }) => {
     await page.goto("/fr");
     expect(Math.round((await languageMenu(page).boundingBox())!.x)).toBe(16);
-    const menu = await banner(page).getByText("Menu", { exact: true }).boundingBox();
-    expect(Math.round(menu!.x + menu!.width)).toBeLessThanOrEqual(374);
-    expect(menu!.x).toBeGreaterThan(195);
+    const bars = await menuButton(page).locator(".menu-bars").boundingBox();
+    expect(Math.round(bars!.x + bars!.width)).toBe(374);
+    expect(bars!.x).toBeGreaterThan(195);
+  });
+
+  for (const route of ["/fr", "/fr/tarifs"]) {
+    test(`draws the menu button as two thin lines, without a frame, on ${route}`, async ({ page }) => {
+      await page.goto(route);
+      const button = menuButton(page);
+      await expect(button).toHaveAccessibleName("Menu");
+      await expect(button).toHaveCSS("border-top-width", "0px");
+      await expect(button.locator(".dropdown-chevron")).toBeHidden();
+      const box = (await button.boundingBox())!;
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      const lines = await button.locator(".menu-bars > span").all();
+      expect(lines).toHaveLength(2);
+      const [top, bottom] = await Promise.all(lines.map(async (line) => (await line.boundingBox())!));
+      for (const line of [top, bottom]) {
+        expect(Math.round(line.width)).toBe(24);
+        expect(line.height).toBeLessThanOrEqual(1.5);
+      }
+      expect(bottom.y - top.y).toBeGreaterThanOrEqual(6);
+      expect(top.x).toBe(bottom.x);
+    });
+  }
+
+  test("turns the two lines into a cross when the menu opens", async ({ page }) => {
+    await page.goto("/fr");
+    await menuButton(page).click();
+    await expect(menuButton(page)).toHaveAccessibleName("Fermer");
+    const lines = menuButton(page).locator(".menu-bars > span");
+    await expect(lines.nth(0)).toHaveCSS("rotate", "45deg");
+    await expect(lines.nth(1)).toHaveCSS("rotate", "-45deg");
+    const [top, bottom] = await Promise.all([lines.nth(0).boundingBox(), lines.nth(1).boundingBox()]);
+    expect(Math.abs(top!.y + top!.height / 2 - (bottom!.y + bottom!.height / 2))).toBeLessThan(1);
+    await expect(menuButton(page)).toHaveCSS("color", "rgb(6, 42, 44)");
   });
 
   test("offers the same entries in the menu", async ({ page }) => {
     await page.goto("/fr");
-    await banner(page).getByText("Menu", { exact: true }).click();
+    await menuButton(page).click();
     for (const name of ["La plage", "Sapotille", "Maracudja", "Carambole", "Contact"]) {
       await expect(banner(page).getByRole("link", { name, exact: true }).locator("visible=true")).toHaveCount(1);
     }
     await expect(banner(page).locator(".btn")).toHaveCount(0);
+  });
+
+  for (const route of ["/fr", "/fr/tarifs"]) {
+    test(`covers the whole screen with the menu on ${route}`, async ({ page }) => {
+      await page.goto(route);
+      await menuButton(page).click();
+      const sheet = banner(page).locator(".menu-sheet");
+      await expect(sheet).toBeVisible();
+      expect(await sheet.boundingBox()).toEqual({ x: 0, y: 0, width: 390, height: 844 });
+      await expect(sheet).toHaveCSS("background-color", "rgb(255, 255, 255)");
+      await expect(page.locator("html")).toHaveCSS("overflow-y", "hidden");
+
+      await expect(menuButton(page)).toHaveAccessibleName("Fermer");
+      await menuButton(page).click();
+      await expect(sheet).toBeHidden();
+      await expect(page.locator("html")).not.toHaveCSS("overflow-y", "hidden");
+    });
+  }
+
+  test("shows the gîtes as a gallery of photos in the menu", async ({ page }) => {
+    await page.goto("/fr");
+    await menuButton(page).click();
+    const cards = banner(page).locator(".menu-sheet .menu-card");
+    await expect(cards.locator(".menu-card-name")).toHaveText(["Sapotille", "Maracudja", "Carambole"]);
+    const boxes = await Promise.all((await cards.locator("img").all()).map(async (image) => {
+      await expect.poll(() => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0)).toBe(true);
+      return (await image.boundingBox())!;
+    }));
+    boxes.forEach((box, index) => {
+      expect(box.width).toBeGreaterThanOrEqual(96);
+      expect(box.y).toBe(boxes[0].y);
+      expect(box.y + box.height).toBeLessThanOrEqual(844);
+      if (index > 0) expect(box.x).toBeGreaterThan(boxes[index - 1].x + boxes[index - 1].width);
+    });
+    expect(boxes[0].x).toBeGreaterThanOrEqual(16);
+    expect(boxes[2].x + boxes[2].width).toBeLessThanOrEqual(374);
+    await cards.nth(1).click();
+    await expect(page).toHaveURL(/\/fr\/gites\/maracudja$/);
+    await expect(banner(page).locator(".menu-sheet")).toBeHidden();
+  });
+
+  test("keeps the menu over the whole screen in English", async ({ page }) => {
+    await page.goto("/en");
+    await expect(menuButton(page)).toHaveAccessibleName("Menu");
+    await menuButton(page).click();
+    await expect(menuButton(page)).toHaveAccessibleName("Close");
   });
 });
 

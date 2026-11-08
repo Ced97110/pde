@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { units } from "@/content/units";
 import { business } from "@/content/business";
 import type { Dictionary, Locale } from "@/content/dictionaries";
@@ -7,6 +8,7 @@ import { Dropdown } from "./Dropdown";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { RollingLabel } from "./RollingLabel";
 import { CueArrow } from "./CueArrow";
+import { HoverNav } from "./HoverNav";
 
 interface HeaderProps {
   locale: Locale;
@@ -17,16 +19,15 @@ export function Header({ locale, dict }: HeaderProps) {
   const base = `/${locale}`;
   const contactHref = `${base}/contact`;
   const beachLinkProps = { href: business.beachGuideUrl, target: "_blank", rel: "noopener noreferrer" };
-  const unitLinks = units.map((unit) => (
-    <Link key={unit.slug} href={`${base}/gites/${unit.slug}`} className="menu-link">
-      {unit.name}
-    </Link>
-  ));
-
-  const unitCards = units.map((unit) => (
-    <Link key={unit.slug} href={`${base}/gites/${unit.slug}`} className="menu-card">
+  const unitCards = units.map((unit, index) => (
+    <Link
+      key={unit.slug}
+      href={`${base}/gites/${unit.slug}`}
+      className="menu-card"
+      style={{ "--card-index": index } as CSSProperties}
+    >
       <span className="menu-card-photo">
-        <Image src={unit.photos[0]} alt="" fill sizes="192px" loading="eager" className="object-cover" />
+        <Image src={unit.photos[0]} alt="" fill sizes="(min-width: 1024px) 192px, 30vw" loading="eager" className="object-cover" />
       </span>
       <span className="label menu-card-name">{unit.name}</span>
       <CueArrow className="menu-card-cue" />
@@ -45,26 +46,45 @@ export function Header({ locale, dict }: HeaderProps) {
         </Link>
 
         <div className="flex items-center justify-end gap-6">
-          <nav className="label hidden items-center gap-6 lg:flex">
-            <a {...beachLinkProps}>
+          <HoverNav className="label hidden items-center gap-6 lg:flex">
+            <a {...beachLinkProps} className="py-2">
               <RollingLabel text={dict.nav.beach} />
             </a>
-            <Dropdown label={<RollingLabel text={dict.nav.units} />} openOnHover panelClassName="gap-3 p-3">
+            <Dropdown label={<RollingLabel text={dict.nav.units} />} openOnHover panelClassName="menu-gallery gap-3 p-3">
               {unitCards}
             </Dropdown>
-            <Link href={contactHref}>
+            <Link href={contactHref} className="py-2">
               <RollingLabel text={dict.nav.contact} />
             </Link>
-          </nav>
-          <Dropdown label={dict.nav.menu} className="lg:hidden" summaryClassName="rounded border border-line px-3 text-sm">
-            <a {...beachLinkProps} className="menu-link">
-              {dict.nav.beach}
-            </a>
-            <p className="px-2 pt-2 text-xs text-muted">{dict.nav.units}</p>
-            {unitLinks}
-            <Link href={contactHref} className="menu-link">
-              {dict.nav.contact}
-            </Link>
+          </HoverNav>
+          <Dropdown
+            label={
+              <>
+                <span className="sr-only menu-when-closed">{dict.nav.menu}</span>
+                <span className="sr-only menu-when-open">{dict.nav.close}</span>
+                <span className="menu-bars" aria-hidden="true">
+                  <span />
+                  <span />
+                </span>
+              </>
+            }
+            variant="sheet"
+            panelClassName=""
+            className="lg:hidden"
+            summaryClassName="menu-toggle"
+          >
+            <div className="menu-sheet-inner">
+              <a {...beachLinkProps} className="menu-sheet-link title-type">
+                {dict.nav.beach}
+              </a>
+              <div className="menu-sheet-units">
+                <p className="label text-muted">{dict.nav.units}</p>
+                <div className="menu-sheet-gallery">{unitCards}</div>
+              </div>
+              <Link href={contactHref} className="menu-sheet-link title-type">
+                {dict.nav.contact}
+              </Link>
+            </div>
           </Dropdown>
         </div>
       </div>
