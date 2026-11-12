@@ -30,8 +30,8 @@ test.describe("layout at 1440px", () => {
     expect(second!.y).toBeGreaterThan(first!.y + 40);
   });
 
-  test("names the guest under each quote", async ({ page }) => {
-    await expect(cards(page).first().locator("figcaption")).toContainText("Monique, décembre 2018");
+  test("names the guest under each quote, without a date", async ({ page }) => {
+    await expect(cards(page).locator("figcaption")).toHaveText(["Monique", /^\S+$/]);
   });
 
   test("links to all the reviews", async ({ page }) => {
@@ -49,7 +49,14 @@ test("keeps the reviews page in body text", async ({ page }) => {
 
 test("marks the English quotes as translated", async ({ page }) => {
   await page.goto("/en");
-  await expect(cards(page).first().locator("figcaption")).toContainText("translated from French");
+  await expect(cards(page).first().locator("figcaption")).toHaveText("Monique · translated from French");
+});
+
+test("shows no date under the quotes on the reviews page", async ({ page }) => {
+  await page.goto("/fr/avis");
+  const captions = await page.locator("figcaption").allTextContents();
+  expect(captions.length).toBeGreaterThan(0);
+  for (const caption of captions) expect(caption).not.toMatch(/\d{4}/);
 });
 
 test("stays complete without JavaScript", async ({ browser }) => {

@@ -18,7 +18,7 @@ export function ReviewCard({ review, locale, dict, large = false }: ReviewCardPr
         « {text} »
       </blockquote>
       <figcaption className="text-sm text-muted">
-        <span className="text-foreground">{review.author}</span>, {review.date[locale]}
+        <span className="text-foreground">{review.author}</span>
         {locale === "en" && ` · ${dict.reviews.translated}`}
       </figcaption>
     </figure>
