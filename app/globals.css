@@ -244,7 +244,7 @@ body:has(.hero):not([data-header="solid"]) .header-logo {
   content: url("/brand/logo-pieds-light.svg");
 }
 
-/* On the hero only the logo shows: the menus fade in with the white header. */
+/* On the hero the language stays hidden and fades in with the white header; the menu always shows. */
 .header-side {
   transition:
     opacity 300ms ease,

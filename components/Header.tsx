@@ -45,7 +45,7 @@ export function Header({ locale, dict }: HeaderProps) {
           <Image src="/brand/logo-pieds.svg" alt="" width={64} height={64} className="header-logo" priority />
         </Link>
 
-        <div className="header-side flex items-center justify-end gap-6">
+        <div className="flex items-center justify-end gap-6">
           <HoverNav className="label hidden items-center gap-6 lg:flex">
             <a {...beachLinkProps} className="py-2">
               <RollingLabel text={dict.nav.beach} />

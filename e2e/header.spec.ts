@@ -239,6 +239,17 @@ test.describe("phone", () => {
     await expect(menuButton(page)).toHaveCSS("color", "rgb(6, 42, 44)");
   });
 
+  test("opens the menu from the top of the hero, white lines over the photo", async ({ page }) => {
+    await page.goto("/fr");
+    await expect(page.locator("body")).toHaveAttribute("data-header", "hero");
+    await expect(menuButton(page)).toBeVisible();
+    await expect(menuButton(page)).toHaveCSS("color", "rgb(255, 255, 255)");
+    await menuButton(page).click();
+    await expect(banner(page).locator(".menu-sheet")).toBeVisible();
+    await expect(menuButton(page)).toHaveAccessibleName("Fermer");
+    await expect(menuButton(page)).toHaveCSS("color", "rgb(6, 42, 44)");
+  });
+
   test("offers the same entries in the menu", async ({ page }) => {
     await page.goto("/fr");
     await pastHero(page);

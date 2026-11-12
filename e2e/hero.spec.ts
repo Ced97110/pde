@@ -278,15 +278,23 @@ test("gets the normal header back past the hero", async ({ page }) => {
   await expect(page.locator("body > header")).toHaveCSS("top", "0px");
 });
 
+const language = (page: Page) => page.getByRole("banner").locator("summary[aria-label^='Langue']");
+const menu = (page: Page, width: number) =>
+  page.getByRole("banner").locator(width < 1024 ? "summary.menu-toggle" : "nav");
+
 for (const width of [1440, 1024, 390, 320]) {
-  test(`doubles the logo on the hero at ${width}px, alone in the header`, async ({ page }) => {
+  test(`doubles the logo on the hero at ${width}px, the menu beside it`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/fr");
     const logo = (await page.locator("body > header .header-logo").boundingBox())!;
     expect(logo).toMatchObject({ width: 128, height: 128 });
     expect(Math.abs(logo.x + logo.width / 2 - width / 2)).toBeLessThanOrEqual(1);
-    await expect(page.getByRole("banner").locator("summary:visible, nav a:visible, a.btn:visible")).toHaveCount(0);
+    await expect(menu(page, width)).toBeVisible();
+    const box = (await menu(page, width).boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(logo.x + logo.width);
+    await expect(language(page)).toBeHidden();
+    await expect(page.getByRole("banner").locator("a.btn:visible")).toHaveCount(0);
   });
 }
 
@@ -302,26 +310,28 @@ test("keeps the normal logo once past the hero and on the other pages", async ({
 });
 
 for (const width of [1440, 390]) {
-  test(`hides the navigation on the hero at ${width}px, keeping only the logo`, async ({ page }) => {
+  test(`hides only the language on the hero at ${width}px`, async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/fr");
     const banner = page.getByRole("banner");
     await expect(banner.locator(".header-logo")).toBeVisible();
-    await expect(banner.locator("summary:visible, nav a:visible")).toHaveCount(0);
+    await expect(menu(page, width)).toBeVisible();
+    await expect(language(page)).toBeHidden();
     await expect(banner).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 
     await pastHero(page);
-    await expect(banner.locator("summary[aria-label^='Langue']")).toBeVisible();
-    await expect(banner.locator(width < 1024 ? "summary.menu-toggle" : "nav")).toBeVisible();
+    await expect(language(page)).toBeVisible();
+    await expect(menu(page, width)).toBeVisible();
 
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(page.locator("body")).toHaveAttribute("data-header", "hero");
-    await expect(banner.locator("summary:visible, nav a:visible")).toHaveCount(0);
+    await expect(language(page)).toBeHidden();
+    await expect(menu(page, width)).toBeVisible();
   });
 }
 
-test("keeps the hidden navigation out of the keyboard order on the hero", async ({ page }) => {
+test("reaches the menu but not the hidden language from the keyboard on the hero", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/fr");
@@ -331,11 +341,14 @@ test("keeps the hidden navigation out of the keyboard order on the hero", async 
     reached.push(await page.evaluate(() => {
       const element = document.activeElement;
       if (!element?.closest("body > header")) return "outside";
-      return element.matches("a[href='/fr']") ? "logo" : element.outerHTML.slice(0, 60);
+      if (element.matches("a[href='/fr']")) return "logo";
+      if (element.closest("nav")) return "menu";
+      return element.outerHTML.slice(0, 60);
     }));
   }
-  expect(reached.filter((entry) => entry !== "outside" && entry !== "logo")).toEqual([]);
+  expect(reached.filter((entry) => !["outside", "logo", "menu"].includes(entry))).toEqual([]);
   expect(reached).toContain("logo");
+  expect(reached).toContain("menu");
 });
 
 test("eases the logo from one size to the other", async ({ page }) => {
