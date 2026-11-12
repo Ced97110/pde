@@ -60,7 +60,7 @@ Date: 2026-11-06. awwwards-mcp 1.18.0, launched through npx.
 - Header now uses the page margin on every page. e2e/header.spec.ts added.
 
 ## Section 5 (2026-11-06)
-- Built: text and included services on the left, garden flower photo on the right, full-screen height. No portrait of Madame Panol yet.
+- Built: text and included services on the left, garden flower photo on the right, full-screen height. No portrait of Marie-Claude yet.
 - e2e/host.spec.ts added. 126 e2e, 21 unit, tsc OK, lint 0 errors.
 - Waiting for the user's "valide" before section 6.
 

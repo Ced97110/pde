@@ -24,7 +24,7 @@ Cette révision remplace les sections 2 à 7 quand elles se contredisent, et aba
 - **Section 4 :** titre à droite sur fond blanc, révélé mot par mot au défilement comme le manifeste, puis photos bord à bord à la hauteur du viewport, sans marge : Sapotille et Maracudja en demi-écran, Carambole en plein écran dessous, et trois plein écrans empilés sur téléphone. Seul le nom du gîte est posé sur les photos, en blanc, voile noir uni à 53 % contrôlé à 4,5:1 sur les vraies photos. Au survol ou au focus clavier, fondu vers une autre photo du même gîte. Surface et capacité restent en texte simple, sans pastilles. Parallaxe à partir de 768 px uniquement.
 - **En-tête :** langue en menu déroulant à l'extrême gauche, logo au centre, à droite La plage (lien externe, nouvel onglet), Nos gîtes (menu déroulant des 3 gîtes), Contact et le bouton Réserver. Cela remplace la navigation de la section 6. Photos, Tarifs, Situation et Avis passent dans le pied de page.
 - **Réserver :** remplace tous les libellés « Vérifier les disponibilités » et mène au formulaire de contact.
-- **Section 5 :** texte et services à gauche, photo `2026-10-31-24` à droite en attendant un portrait de Madame Panol.
+- **Section 5 :** texte et services à gauche, photo `2026-10-31-24` à droite en attendant un portrait de Marie-Claude.
 - **Section 6 :** titre à droite, deux avis décalés en Neo Saphion capitales à 23 px, texte intégral des hôtes.
 - **Jardin :** il n'y a pas de jardin. Pas de section Jardin, et les photos concernées servent seulement à présenter le site.
 - **Section 8 :** supprimée. Le hero ne porte plus ni bouton ni lien : Réserver reste dans l'en-tête.
@@ -121,7 +121,7 @@ C'est le plus gros écart avec la référence, et il ne se règle pas avec du co
 2. **Recadrer serré** : en portrait et en détail plutôt qu'en vue de pièce entière.
 3. **Sélection de départ** : `10-14-52` (balcon sur la verdure), `10-14-20`, `10-14-43`, `10-31-9` (plage), `10-31-14` (jardin), `10-31-24` (fleur). Les salles de bain restent dans la galerie.
 4. **Repartir des originaux si possible** : toutes les images font 80 à 100 Ko pour 2000 px de large. À vérifier en plein écran, car les artefacts risquent de se voir sur une image bord à bord.
-5. **Portrait de Madame Panol** : aucun dans la galerie. Il donnerait la même chaleur que la section « Hi, I'm Moritz ». À demander.
+5. **Portrait de Marie-Claude** : aucun dans la galerie. Il donnerait la même chaleur que la section « Hi, I'm Moritz ». À demander.
 
 ## 6. Rythme des sections
 
@@ -133,7 +133,7 @@ Page d'accueil Casa Momo : 19 157 px en desktop, 15 025 px en mobile [mesuré]. 
 | 2 | Manifeste | Ground | 70 à 90svh | Une phrase courte, grande, alignée à droite |
 | 3 | Persiennes | Persienne | 500vh | Lames 3D, puis histoire WebGL en continu : portail, chemin, plage |
 | 4 | Gîtes | Ground | Environ 1 800 px | Grand titre aligné à droite, puis les 3 cartes |
-| 5 | Chez Madame Panol | Surface | 100svh | Texte à gauche, photo à droite, services inclus |
+| 5 | Chez Marie-Claude | Surface | 100svh | Texte à gauche, photo à droite, services inclus |
 | 6 | Avis | Ground | 60 à 80svh | 2 avis en grand, lien vers les autres |
 | 7 | ~~Jardin~~ supprimée | - | - | Il n'y a pas de jardin : ces photos servent seulement à présenter le site |
 | 8 | ~~Dites-nous vos dates~~ supprimée | - | - | - |
@@ -256,7 +256,7 @@ L'image doit dépasser son cadre d'au moins 90 px en hauteur. Sur mobile, rédui
 
 1. **Police de titre** : remplacer Zilla Slab par Gloock modifie le kit B. Recommandé, car c'est ce qui rapproche le plus du ton visé. Sinon, garder Zilla Slab et accepter un rendu plus franc et moins éditorial.
 2. **Photos** : qui harmonise les images, et les originaux existent-ils ?
-3. **Portrait de Madame Panol** : disponible ?
+3. **Portrait de Marie-Claude** : disponible ?
 4. **Navigation réduite** : d'accord pour passer Photos et Avis dans le pied de page ?
 5. **Fonds sombres** : d'accord pour la persienne sur les sections 3 et 8, sans mode sombre global ?
 

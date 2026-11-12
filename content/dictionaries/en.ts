@@ -22,10 +22,10 @@ export const en: Dictionary = {
   home: {
     manifesto: "Three gîtes right on the beach in Sainte-Anne, steps from the market. No car needed.",
     beachPhotoAlt: "Bedroom opening onto the balcony, the palm trees and the sea",
-    hostTitle: "Staying with Madame Panol",
+    hostTitle: "Staying with Marie-Claude",
     hostPhotoAlt: "Red tropical flower",
     hostText:
-      "You are welcomed here by the family, not a front desk. Got a question before you book? Madame Panol answers it herself.",
+      "You are welcomed here by the family, not a front desk. Got a question before you book? Marie-Claude answers it herself.",
     reviewsCta: "Read all the reviews",
     introText:
       "Three fully-equipped apartments right on the beach in Sainte-Anne, steps from shops, restaurants, the market and the town centre. No car needed.",
@@ -85,7 +85,7 @@ export const en: Dictionary = {
   },
   contact: {
     title: "Get in touch",
-    messageStart: "A question about a gîte or your dates? Call Madame Panol on",
+    messageStart: "A question about a gîte or your dates? Call Marie-Claude on",
     messageMiddle: "or",
     messageEmail: "write to us",
     subtitle: "You can also fill in this form, we reply as soon as possible.",

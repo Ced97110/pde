@@ -21,10 +21,10 @@ export const fr = {
     manifesto:
       "Trois gîtes posés sur la plage de Sainte-Anne, à deux pas du marché. Pas besoin de voiture.",
     beachPhotoAlt: "Chambre ouverte sur le balcon, les palmiers et la mer",
-    hostTitle: "Chez Madame Panol",
+    hostTitle: "Chez Marie-Claude",
     hostPhotoAlt: "Fleur rouge tropicale",
     hostText:
-      "Ici, vous êtes reçus par la famille, pas par une réception. Vous avez une question avant de réserver ? C'est Madame Panol qui vous répond.",
+      "Ici, vous êtes reçus par la famille, pas par une réception. Vous avez une question avant de réserver ? C'est Marie-Claude qui vous répond.",
     reviewsCta: "Lire tous les avis",
     introText:
       "Trois hébergements tout confort posés sur la plage de Sainte-Anne, à deux pas des commerces, restaurants, du marché et du centre-ville. Pas besoin de voiture.",
@@ -84,7 +84,7 @@ export const fr = {
   },
   contact: {
     title: "Nous contacter",
-    messageStart: "Une question sur un gîte ou vos dates ? Appelez Madame Panol au",
+    messageStart: "Une question sur un gîte ou vos dates ? Appelez Marie-Claude au",
     messageMiddle: "ou",
     messageEmail: "écrivez-nous",
     subtitle: "Vous pouvez aussi remplir ce formulaire, nous répondons dans les meilleurs délais.",

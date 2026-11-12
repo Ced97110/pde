@@ -17,7 +17,7 @@ test.describe("layout at 1440px", () => {
   });
 
   test("sets the text left and the photo right, on the page margins", async ({ page }) => {
-    await expect(host(page).getByRole("heading", { level: 2 })).toHaveText("Chez Madame Panol");
+    await expect(host(page).getByRole("heading", { level: 2 })).toHaveText("Chez Marie-Claude");
     const text = await page.locator(".host-text").boundingBox();
     const frame = await photo(page).boundingBox();
     expect(Math.round(text!.x)).toBe(48);

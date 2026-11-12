@@ -17,7 +17,7 @@ export const business = {
   contact: {
     phone: "+590 690 50 34 58",
     phoneDisplay: "0690 50 34 58",
-    contactName: "Madame Panol",
+    contactName: "Marie-Claude",
     email: "residenceleseauxbleues@gmail.com",
     carRentalPartnerPhone: "06 46 64 45 13",
   },
